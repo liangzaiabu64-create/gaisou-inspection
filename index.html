@@ -2300,7 +2300,9 @@ function renderAnalysis(){
       h += '<div style="font-size:13px"><b>再発 '+r.recur+'回</b> (計'+r.occurrences+'回)</div>';
       if(r.avgGap!=null){
         h += '<div style="font-size:12px;color:var(--c-text2)">平均間隔 '+r.avgGap+'日';
-        if(r.accelerating){ h += ' <span style="color:var(--c-danger);font-weight:600">⚠加速</span>'; }
+        if(r.trend==='accel'){ h += ' <span style="color:var(--c-danger);font-weight:600">⚠加速(劣化)</span>'; }
+        else if(r.trend==='improve'){ h += ' <span style="color:var(--c-success);font-weight:600">改善傾向</span>'; }
+        else if(r.trend==='insufficient'){ h += ' <span style="color:var(--c-text3)">判定にはあと数件必要</span>'; }
         h += '</div>';
       }
       h += '</div></div>';
@@ -2345,6 +2347,10 @@ function renderAnalysis(){
       mids.forEach(function(mid){
         var c = r.cells[mid];
         if(c==null){ h += '<td style="padding:6px 8px;border-bottom:1px solid var(--c-bd);text-align:center;color:var(--c-text3)">—</td>'; }
+        else if(c.chk < 5){
+          // 点検回数が少ないセルは率が不安定 → 色を付けず淡色で数値のみ表示
+          h += '<td style="padding:6px 8px;border-bottom:1px solid var(--c-bd);text-align:center;background:var(--c-bg2);color:var(--c-text3)"><b>'+c.rate+'%</b><div style="font-size:10px;opacity:0.8">'+c.ng+'/'+c.chk+'</div></td>';
+        }
         else {
           var bg = heatColor(c.rate);
           var fg = c.rate>=50 ? '#fff' : 'var(--c-text)';
@@ -2355,6 +2361,7 @@ function renderAnalysis(){
     });
     h += '</tbody></table></div>';
     h += '<div style="font-size:12px;color:var(--c-text2);margin-top:8px;padding:8px;background:var(--c-bg2);border-radius:var(--r-md)">💡 1つの号だけ赤い箇所は、その設備固有の問題かもしれません。低い号の状態を参考に、点検・対策を他号へ展開できます。</div>';
+    h += '<div style="font-size:11px;color:var(--c-text3);margin-top:6px">※点検回数あたりのNG率です。号ごとの稼働量の差は考慮していません。点検回数が少ないセル(5回未満)は参考値として淡色で表示しています。</div>';
   }
   h += '</div>';
 
@@ -2372,7 +2379,7 @@ function renderAnalysis(){
       if(a.monotonic!==b.monotonic) return a.monotonic?-1:1;
       return Math.abs(b.totalDrift) - Math.abs(a.totalDrift);
     });
-    h += '<div style="font-size:12px;color:var(--c-text2);margin-bottom:8px">記入された数値(基準→実測)の推移です。一方向にズレ続けている箇所は、バラツキではなく劣化が進んでいるサインかもしれません。</div>';
+    h += '<div style="font-size:12px;color:var(--c-text2);margin-bottom:8px">記入された数値(基準→実測)の推移です。一方向にズレ続けている箇所は、バラツキではなく劣化が進んでいるサインかもしれません。<br>※基準値が途中で変わると累計ズレは目安になります。</div>';
     deltaRows.slice(0,10).forEach(function(r){
       h += '<div style="padding:8px 0;border-bottom:1px solid var(--c-bd)">';
       h += '<div style="display:flex;justify-content:space-between;align-items:flex-start;gap:8px">';
@@ -2452,34 +2459,71 @@ function _abUniqueSortedDates(ds){
   return out;
 }
 
+// 故障日列のトレンド検定(条件付きLaplace検定)。
+// 初回故障と最終故障を区間[0,T]の両端とみなし、内部点の一様性(=一定率/HPP)を検定。
+// U>0: 後ろに偏る=故障率増加(劣化加速) / U<0: 改善 / |U|大: 有意
+function _abLaplaceU(sortedDates){
+  var m = sortedDates.length;
+  if(m < 4) return null;                       // 内部点2件未満は判定不可
+  var T = _abDaysBetween(sortedDates[0], sortedDates[m - 1]);
+  if(T <= 0) return null;                       // 区間0は判定不可
+  var nIn = m - 2;
+  var sum = 0;
+  for(var i = 1; i < m - 1; i++) sum += _abDaysBetween(sortedDates[0], sortedDates[i]);
+  return (sum - nIn * T / 2) / (T * Math.sqrt(nIn / 12));
+}
+
 // ① △→× リードタイム・転落率(現在の設備)
+// 【データソース】△=経過観察(watch)の発生日 / ×=記録(records)の'ng'日
+//   ※記録シートには△が保存されないため、△は必ず watch から取得する。
 function computeTriToNg(){
-  var records = getRecords(), items = getItems();
-  // item -> [{date,v}] 日付昇順
-  var series = {};
-  Object.keys(records).sort().forEach(function(date){
-    var r = records[date]; if(!r || !r.results) return;
-    for(var id in r.results){ (series[id]=series[id]||[]).push({ date:date, v:r.results[id] }); }
+  var items = getItems();
+
+  // 項目ID -> △発生日[](昇順・重複排除)  ※watch = △エピソード
+  var triByItem = {};
+  getWatches().concat(getWatchDone()).forEach(function(w){
+    if(!w.itemId || !w.date) return;
+    (triByItem[w.itemId] = triByItem[w.itemId] || []).push(w.date);
   });
+
+  // 項目ID -> ×発生日[](昇順・重複排除)  ※records の 'ng' 日
+  var ngByItem = {};
+  var records = getRecords();
+  Object.keys(records).forEach(function(date){
+    var r = records[date]; if(!r || !r.results) return;
+    for(var id in r.results){
+      if(r.results[id] === 'ng'){ (ngByItem[id] = ngByItem[id] || []).push(date); }
+    }
+  });
+
   var rows = [];
   items.forEach(function(it){
-    var s = series[it.id] || [];
-    var triCount=0, fell=0, leads=[];
-    for(var i=0;i<s.length;i++){
-      if(s[i].v!=='tri') continue;
-      triCount++;
-      for(var j=i+1;j<s.length;j++){
-        if(s[j].v==='ng'){ fell++; leads.push(_abDaysBetween(s[i].date, s[j].date)); break; }
-        // 次に△や〇が来ても、さらに先の×を探し続ける
+    var tris = _abUniqueSortedDates(triByItem[it.id] || []);
+    if(tris.length === 0) return;                  // △が無い項目は対象外
+    var ngs  = _abUniqueSortedDates(ngByItem[it.id] || []);
+
+    var fell = 0, leads = [];
+    for(var i = 0; i < tris.length; i++){
+      var start = tris[i];
+      var end   = (i + 1 < tris.length) ? tris[i + 1] : null; // 次の△エピソード開始
+      // [start, end) の範囲で最初の×(同日含む、次△の前まで)
+      var hit = null;
+      for(var j = 0; j < ngs.length; j++){
+        var afterStart = _abDaysBetween(start, ngs[j]) >= 0;          // ng >= start
+        var beforeNext = (end === null) || (_abDaysBetween(ngs[j], end) > 0); // ng < end
+        if(afterStart && beforeNext){ hit = ngs[j]; break; }
       }
+      if(hit){ fell++; leads.push(_abDaysBetween(start, hit)); }
     }
-    if(triCount>0){
-      rows.push({ no:it.no, place:it.place, side:it.side, content:it.content,
-        triCount:triCount, fell:fell,
-        fallRate: Math.round(fell/triCount*100),
-        medLead: leads.length ? _abMedian(leads) : null,
-        minLead: leads.length ? Math.min.apply(null, leads) : null });
-    }
+
+    rows.push({
+      no: it.no, place: it.place, side: it.side, content: it.content,
+      triCount: tris.length,
+      fell: fell,
+      fallRate: Math.round(fell / tris.length * 100),
+      medLead: leads.length ? _abMedian(leads) : null,
+      minLead: leads.length ? Math.min.apply(null, leads) : null
+    });
   });
   return rows;
 }
@@ -2503,10 +2547,17 @@ function computeRecurrence(){
     any = any || {};
     var avgGap = gaps.length ? Math.round(_abAvg(gaps)) : null;
     var lastGap = gaps.length ? gaps[gaps.length-1] : null;
+    var U = _abLaplaceU(ds);
+    var trend = 'none';
+    if(U === null)        trend = 'insufficient';
+    else if(U >= 1.645)   trend = 'accel';     // 劣化加速(5%片側、閾値は調整可)
+    else if(U <= -1.645)  trend = 'improve';
+
     rows.push({ no:any.no, place:any.place, side:any.side, content:any.content,
       occurrences: ds.length, recur: ds.length-1,
       avgGap: avgGap, lastGap: lastGap,
-      accelerating: (gaps.length>=2 && lastGap < _abAvg(gaps)) });
+      laplaceU: (U !== null ? Math.round(U*100)/100 : null),
+      trend: trend });
   });
   return rows;
 }
@@ -2526,6 +2577,8 @@ function computeCrossLineMatrix(){
         var v = r.results[id];
         var a = agg[id] = agg[id] || { ng:0, tri:0, chk:0 };
         a.chk++;
+        // ※記録(records)には△が保存されないため tri は常に0(ここでは集計しない)。
+        //   △率が必要なら①同様 watch から算出する別実装が要る(本改修の範囲外)。
         if(v==='ng') a.ng++; else if(v==='tri') a.tri++;
       }
     }
@@ -2560,7 +2613,8 @@ function parseDefectNumbers(text){
   var s = String(text);
   // --- ズレ型: A→B / A-B / A〜B (小数可、矢印/ハイフン/波/空白を許容) ---
   // 全角矢印・半角矢印・→・⇒・- などを区切りに
-  var mDelta = s.match(/(-?\d+(?:\.\d+)?)\s*(?:→|⇒|->|=>|〜|~|―|−|-)\s*(-?\d+(?:\.\d+)?)/);
+  // 区切りは矢印と波ダッシュのみ(ハイフン/マイナス単独は区切りにしない → 「No.41-42」等の誤抽出を防ぐ)
+  var mDelta = s.match(/(-?\d+(?:\.\d+)?)\s*(?:→|⇒|->|=>|〜|～|~)\s*(-?\d+(?:\.\d+)?)/);
   if(mDelta){
     var from = parseFloat(mDelta[1]);
     var to   = parseFloat(mDelta[2]);
@@ -2617,7 +2671,7 @@ function computeDeltaTrends(){
     // 一方向性: 全てが同符号(>0 or <0)で2点以上なら「累積」
     var allPos = diffs.every(function(d){ return d>0; });
     var allNeg = diffs.every(function(d){ return d<0; });
-    var monotonic = (o.points.length>=2 && (allPos||allNeg));
+    var monotonic = (o.points.length>=3 && (allPos||allNeg));
     // 最新の実測値・累計ズレ
     var last = o.points[o.points.length-1];
     rows.push({
@@ -2658,7 +2712,7 @@ function computeCountTrends(){
       no:o.no, place:o.place, side:o.side, content:o.content,
       days:o.points.length, total:total, max:maxc,
       lastCount:last.count, lastDate:last.date,
-      increasing:(o.points.length>=2 && last.count > avg),
+      increasing:(o.points.length>=3 && last.count > avg),
       points:o.points
     });
   });
