@@ -59,6 +59,13 @@
   .tab { padding: 12px 22px; font-size: 15px; font-weight: 500; cursor: pointer; background: transparent; color: var(--c-text2); border: 1px solid var(--c-bd); border-radius: var(--r-md); min-height: 48px; font-family: var(--font); }
   .tab.active { background: var(--c-info-bg); color: var(--c-info); border-color: var(--c-info-bd); }
 
+  .filter-group { display: inline-flex; gap: 4px; background: var(--c-bg3); padding: 4px; border-radius: var(--r-md); }
+  .filter-btn { padding: 8px 14px; font-size: 14px; border: none; background: transparent; color: var(--c-text2); border-radius: var(--r-md); cursor: pointer; font-family: var(--font); min-height: 40px; }
+  .filter-btn.on { background: var(--c-bg); color: var(--c-text); box-shadow: 0 1px 2px rgba(0,0,0,0.1); font-weight: 500; }
+
+  .analysis-card { background: var(--c-bg); border: 1px solid var(--c-bd); border-radius: var(--r-lg); padding: 16px; margin-bottom: 12px; }
+  .analysis-title { font-size: 15px; font-weight: 500; margin-bottom: 12px; }
+
   .summary { display: grid; grid-template-columns: repeat(2, 1fr); gap: 10px; margin-bottom: 14px; }
   .sc { background: var(--c-bg2); padding: 12px 14px; border-radius: var(--r-md); }
   .sc-label { font-size: 12px; color: var(--c-text2); }
@@ -501,12 +508,14 @@ var STATE = {
   allRecords: { g2: {}, g3: {}, g4: {}, g5: {} },
   allIssues: { g2: [], g3: [], g4: [], g5: [] },
   allDoneIssues: { g2: [], g3: [], g4: [], g5: [] },
+  allIgnoredKeys: { g2: [], g3: [], g4: [], g5: [] },
   date: todayStr(),
   editMode: false,
   sync: { state:'idle', message:'', at:null },
   printMonth: currentMonthStr(),
   editingItem: null,
   staffNames: [],
+  checkFilter: 'all',
   loading: true
 };
 var saveTimer = null;
@@ -539,7 +548,10 @@ function refresh(){
       STATE.allRecords[mid] = (data.records && data.records[mid]) || {};
       STATE.allIssues[mid] = (data.issues && data.issues[mid]) || [];
       STATE.allDoneIssues[mid] = (data.doneIssues && data.doneIssues[mid]) || [];
+      STATE.allIgnoredKeys[mid] = (data.ignoredKeys && data.ignoredKeys[mid]) || [];
     }
+    // 同じ項目の未解決重複を1件に統合(過去の重複登録の後始末)
+    mergeOpenIssues();
     // NG項目から不具合を自動生成(まだ不具合リストにないものを追加)
     syncIssuesFromRecords();
     STATE.staffNames = (data.staffNames && data.staffNames.length) ? data.staffNames : STATE.staffNames;
@@ -556,16 +568,78 @@ function refresh(){
 // NG記録から不具合リストを自動生成
 // 各機械・各項目について、最新のNG発生を拾い、まだ不具合リストに無ければ追加候補にする。
 // 「完了」になっていない限り繰り越される(リストに残り続ける)。
+// 同じ項目(itemId)の「未解決」不具合が複数ある場合、1件に統合する。
+// 情報量が多い(対応コメント・担当・不具合内容が入っている)ものを優先して残し、
+// 残りはサーバの不具合シートからも削除する。重複の後始末用。
+function mergeOpenIssues(){
+  var mids = ['g2','g3','g4','g5'];
+  for(var mi=0; mi<mids.length; mi++){
+    var mid = mids[mi];
+    var issues = STATE.allIssues[mid] || [];
+    var open = [], closed = [];
+    issues.forEach(function(is){ if(is.status==='完了') closed.push(is); else open.push(is); });
+    // itemId ごとにグループ化
+    var groups = {};
+    open.forEach(function(is){
+      var k = is.itemId || ('__'+is.id);
+      (groups[k] = groups[k] || []).push(is);
+    });
+    var kept = [];
+    var toDelete = [];
+    Object.keys(groups).forEach(function(k){
+      var list = groups[k];
+      if(list.length<=1){ kept.push(list[0]); return; }
+      // スコア: 情報が入っているものを優先、同点なら発生日が新しいもの
+      list.sort(function(a,b){
+        var sa = issueInfoScore(a), sb = issueInfoScore(b);
+        if(sa !== sb) return sb - sa;
+        return (b.date||'').localeCompare(a.date||'');
+      });
+      kept.push(list[0]);
+      for(var i=1;i<list.length;i++){ toDelete.push(list[i]); }
+    });
+    if(toDelete.length>0){
+      STATE.allIssues[mid] = kept.concat(closed);
+      if(isGasConfigured){
+        toDelete.forEach(function(is){
+          enqueueSave({ machineId: mid, issueId: is.id, itemId: is.itemId, date: is.date }, 'deleteIssue');
+        });
+      }
+    }
+  }
+}
+// 不具合レコードの情報量スコア(高いほど残す価値が高い)
+function issueInfoScore(is){
+  var s = 0;
+  if(is.detail && String(is.detail).trim()) s += 2;
+  if(is.comment && String(is.comment).trim()) s += 2;
+  if(is.assignee && String(is.assignee).trim()) s += 1;
+  if(is.status && is.status!=='未着手') s += 1;
+  return s;
+}
+
 function syncIssuesFromRecords(){
   var mids = ['g2','g3','g4','g5'];
   for(var mi=0; mi<mids.length; mi++){
     var mid = mids[mi];
     var records = STATE.allRecords[mid] || {};
     var issues = STATE.allIssues[mid] || [];
+    var doneIssues = STATE.allDoneIssues[mid] || [];
+    var ignoredKeys = STATE.allIgnoredKeys[mid] || [];
     var items = STATE.allItems[mid] || [];
     // 既存不具合を itemId+発生日 で索引(重複登録を防ぐ)
+    // ★未完了だけでなく「完了済み」も照合対象に含める。
+    //   これをしないと、完了にして消した不具合が、元のNG記録から再び自動生成されてしまう。
     var existKey = {};
     issues.forEach(function(is){ existKey[is.itemId + '|' + is.date] = true; });
+    doneIssues.forEach(function(is){ existKey[is.itemId + '|' + is.date] = true; });
+    // ★削除済み台帳に載っている itemId|発生日 も「登録済み」とみなし、再生成しない。
+    //   (同じ項目でも別の日に再発したNGは、台帳に無いので新しい不具合として生成される)
+    ignoredKeys.forEach(function(k){ existKey[k] = true; });
+    // 「この項目は未完了の不具合が既にある」かどうかの索引(繰り越し中の判定用)。
+    //   ループ内で新規追加したぶんもここに足し、同一項目の多重生成を防ぐ。
+    var openByItem = {};
+    issues.forEach(function(is){ if(is.status!=='完了') openByItem[is.itemId] = true; });
     // 各日付の記録を走査し、NGを見つける
     var newIssues = [];
     for(var date in records){
@@ -574,10 +648,9 @@ function syncIssuesFromRecords(){
       for(var itemId in rec.results){
         if(rec.results[itemId] !== 'ng') continue;
         var key = itemId + '|' + date;
-        if(existKey[key]) continue; // 既に登録済み
+        if(existKey[key]) continue; // 既に登録済み(未完了・完了済みのどちらも)
         // 同じ項目で「未完了」の不具合が既にあれば、新規追加しない(繰り越し中とみなす)
-        var hasOpen = issues.some(function(is){ return is.itemId===itemId && is.status!=='完了'; });
-        if(hasOpen) continue;
+        if(openByItem[itemId]) continue;
         var it = null;
         for(var k=0;k<items.length;k++){ if(items[k].id===itemId){ it=items[k]; break; } }
         var note = (rec.notes && rec.notes[itemId]) || '';
@@ -596,6 +669,7 @@ function syncIssuesFromRecords(){
           _unsaved: true  // まだサーバ未保存
         });
         existKey[key] = true;
+        openByItem[itemId] = true; // 同一項目の他日NGがこの後に新規生成されるのを防ぐ
       }
     }
     if(newIssues.length>0){
@@ -674,6 +748,29 @@ function updateIssue(issueId, field, value, noRender){
   scheduleIssueSave(target);
   // 状況変更など、見た目が大きく変わるものだけ再描画。テキスト入力は再描画しない。
   if(!noRender) render();
+}
+
+// 不具合をリストから削除(完了済みには移さない)。
+// 削除した「項目+発生日」は台帳に記録され、その日のNGからは二度と自動生成されない。
+// 別の日に同じ項目が再発した場合は、新しい不具合として通常どおり表示される。
+function deleteIssueFromList(issueId){
+  var issues = getIssues();
+  var target = null;
+  for(var i=0;i<issues.length;i++){ if(issues[i].id===issueId){ target=issues[i]; break; } }
+  if(!target) return;
+  if(!confirm('この不具合をリストから削除しますか?\n(完了済みには残りません。削除したこの発生日のぶんは今後復活しません。\n別の日に同じ箇所が再びNGになれば、新しい不具合として表示されます)')) return;
+  // ローカルから除去
+  STATE.allIssues[STATE.machineId] = issues.filter(function(x){ return x.id !== issueId; });
+  // 台帳キーをローカルにも即時反映(この場で再生成されないように)
+  var keys = STATE.allIgnoredKeys[STATE.machineId] || [];
+  var k = target.itemId + '|' + target.date;
+  if(keys.indexOf(k) < 0){ keys = keys.concat([k]); }
+  STATE.allIgnoredKeys[STATE.machineId] = keys;
+  // サーバ側でも削除+台帳記録
+  if(isGasConfigured){
+    enqueueSave({ machineId: STATE.machineId, issueId: issueId, itemId: target.itemId, date: target.date }, 'deleteIssue');
+  }
+  render();
 }
 
 // 経過日数を計算
@@ -896,6 +993,23 @@ function sendItemsChunked(mid, items, onDone, onErr){
 // ============================================================
 // 操作ハンドラ
 // ============================================================
+function setCheckFilter(f){
+  STATE.checkFilter = f;
+  render();
+}
+// 最初のNG項目までスクロール
+function jumpToNG(){
+  var cur = getCurrent();
+  var items = getItems();
+  for(var i=0;i<items.length;i++){
+    if(cur.results[items[i].id]==='ng'){
+      var row = document.querySelector('[data-row="'+items[i].id+'"]');
+      if(row){ row.scrollIntoView({behavior:'smooth', block:'center'}); }
+      return;
+    }
+  }
+}
+
 function setResult(itemId, value){
   if(!STATE.editMode) return;
   var cur = clone(getCurrent());
@@ -907,6 +1021,13 @@ function setResult(itemId, value){
   if(chk) cur.checker = chk.value;
   // データ更新(画面全体は再描画しない)
   storeRecord(STATE.date, cur);
+  // フィルタ中は、判定により表示対象が変わるため全体を再描画。
+  // フィルタなし(すべて表示)のときは軽量に行だけ更新。
+  if(STATE.checkFilter && STATE.checkFilter !== 'all'){
+    scheduleSave(STATE.date, cur);
+    render();
+    return;
+  }
   // タップした行だけ更新
   updateCheckRow(itemId);
   // サマリー・進捗バーだけ更新
@@ -1167,8 +1288,19 @@ function toggleEditMode(){
   }
 }
 
-function switchMachine(mid){ flushSave(); STATE.machineId=mid; STATE.editingItem=null; render(); }
-function switchTab(t){ flushSave(); STATE.tab=t; if(t==='issues') syncIssuesFromRecords(); render(); }
+// 点検途中(入力あり・未点検が残る)で点検タブを離れるときの確認
+function confirmLeaveCheck(){
+  if(STATE.tab !== 'check') return true;
+  if(!STATE.editMode) return true;
+  var stats = getStats();
+  // 入力が1件以上あり、かつ未点検が残っている場合だけ確認
+  if(stats.done > 0 && stats.done < stats.total){
+    return confirm('未点検の項目が '+(stats.total-stats.done)+' 件あります。\nこのまま移動しますか?');
+  }
+  return true;
+}
+function switchMachine(mid){ if(!confirmLeaveCheck()) return; flushSave(); STATE.machineId=mid; STATE.editingItem=null; STATE.checkFilter='all'; render(); }
+function switchTab(t){ if(t!=='check' && !confirmLeaveCheck()) return; flushSave(); STATE.tab=t; if(t==='issues') syncIssuesFromRecords(); render(); }
 function openDate(d){ flushSave(); STATE.date=d; STATE.tab='check'; render(); }
 
 // ============================================================
@@ -1310,6 +1442,7 @@ function render(){
   else if(STATE.tab==='history') html += renderHistory();
   else if(STATE.tab==='items') html += renderItems();
   else if(STATE.tab==='monthly') html += renderMonthly();
+  else if(STATE.tab==='analysis') html += renderAnalysis();
   root.innerHTML = html;
   window.__appRendered = true;
 
@@ -1337,7 +1470,7 @@ function renderTabs(){
   var dl = getDateList().length;
   var openIssues = getIssues().filter(function(is){ return is.status!=='完了'; }).length;
   var issueLabel = '不具合リスト' + (openIssues>0 ? ' ('+openIssues+')' : '');
-  var tabs = [['check','点検実施'],['issues',issueLabel],['history','履歴 ('+dl+')'],['items','項目管理'],['monthly','月次出力']];
+  var tabs = [['check','点検実施'],['issues',issueLabel],['history','履歴 ('+dl+')'],['analysis','分析'],['items','項目管理'],['monthly','月次出力']];
   var h = '<div class="tabs no-print">';
   tabs.forEach(function(t){
     h += '<button class="tab '+(STATE.tab===t[0]?'active':'')+'" data-tab="'+t[0]+'">'+t[1]+'</button>';
@@ -1401,12 +1534,38 @@ function renderCheck(){
 
   h += '<div class="progress-bar no-print"><div class="progress-fill" id="progress-fill" style="width:'+(stats.total?(stats.done/stats.total*100):0)+'%"></div></div>';
 
+  // フィルタ + NGジャンプ(取りこぼし防止の導線)
+  var f = STATE.checkFilter || 'all';
+  var undone = stats.total - stats.done;
+  h += '<div class="no-print" style="display:flex;gap:8px;flex-wrap:wrap;align-items:center;margin-bottom:12px">';
+  h += '<div class="filter-group">';
+  h += '<button class="filter-btn '+(f==='all'?'on':'')+'" data-filter="all">すべて ('+stats.total+')</button>';
+  h += '<button class="filter-btn '+(f==='undone'?'on':'')+'" data-filter="undone">未点検 ('+undone+')</button>';
+  h += '<button class="filter-btn '+(f==='ng'?'on':'')+'" data-filter="ng">NG ('+stats.ng+')</button>';
+  h += '</div>';
+  if(stats.ng>0){ h += '<button class="btn sm danger" id="btn-jump-ng" style="margin-left:auto">⚠ NGへ移動</button>'; }
+  h += '</div>';
+
   h += '<div class="no-print">';
   var gr = getGrouped();
+  var shownTotal = 0;
   gr.order.forEach(function(place){
     var list = gr.groups[place];
-    h += '<div class="group-header">📁 '+esc(place)+' <span style="font-weight:400;margin-left:6px">('+list.length+'項目)</span></div>';
-    list.forEach(function(it){
+    // このグループ内で、フィルタに合致する項目だけ抽出
+    var visible = list.filter(function(it){
+      var v = cur.results[it.id];
+      if(f==='undone') return !v;
+      if(f==='ng') return v==='ng';
+      return true;
+    });
+    if(visible.length===0) return; // フィルタで空のグループは見出しごと隠す
+    // グループ進捗(このグループの完了数/項目数)
+    var gdone = 0;
+    list.forEach(function(it){ if(cur.results[it.id]) gdone++; });
+    h += '<div class="group-header">📁 '+esc(place)+
+      ' <span style="font-weight:400;margin-left:6px">('+gdone+'/'+list.length+' 完了)</span></div>';
+    visible.forEach(function(it){
+      shownTotal++;
       var v = cur.results[it.id];
       var note = cur.notes[it.id]||'';
       var cls = v==='ok'?'is-ok':v==='ng'?'is-ng':'';
@@ -1416,6 +1575,9 @@ function renderCheck(){
       h += '</div>';
     });
   });
+  if(shownTotal===0){
+    h += '<div class="empty">'+(f==='undone'?'未点検の項目はありません 👍':f==='ng'?'NGの項目はありません 👍':'項目がありません')+'</div>';
+  }
   h += '</div>';
 
   h += '<div class="no-print" style="margin-top:20px;display:flex;justify-content:space-between;flex-wrap:wrap;gap:8px">';
@@ -1522,6 +1684,9 @@ function issueCard(is){
     h += '<option value="'+s+'" '+(is.status===s?'selected':'')+'>'+s+'</option>';
   });
   h += '</select></label>';
+  if(!isDone){
+    h += '<button class="btn sm danger" data-issue-delete="'+is.id+'" style="margin-left:auto">🗑 削除</button>';
+  }
   h += '</div>';
   h += '</div>';
   return h;
@@ -1657,6 +1822,108 @@ function renderEditModal(){
   // サムネタップで拡大
   var thumb = el('edit-photo-thumb');
   if(thumb && e.photoId){ thumb.onclick = function(){ openPhotoModal(e.photoId); }; }
+}
+
+// ============================================================
+// 分析タブ(NG発生ランキング・長期未対応アラート・点検実施率)
+// ============================================================
+function renderAnalysis(){
+  var m = getMachine();
+  var items = getItems();
+  var records = getRecords();
+  var issues = getIssues();
+
+  // 項目別NG発生回数(全期間)
+  var ngCount = {};
+  for(var d in records){
+    var rec = records[d];
+    if(!rec || !rec.results) continue;
+    for(var itemId in rec.results){
+      if(rec.results[itemId]==='ng'){ ngCount[itemId] = (ngCount[itemId]||0) + 1; }
+    }
+  }
+  var ranking = [];
+  items.forEach(function(it){
+    var c = ngCount[it.id] || 0;
+    if(c>0) ranking.push({ no:it.no, place:it.place, side:it.side, content:it.content, count:c });
+  });
+  ranking.sort(function(a,b){ return b.count - a.count; });
+
+  // 長期未対応の不具合(未完了を経過日数の多い順)
+  var openIssues = getIssues().filter(function(is){ return is.status!=='完了'; })
+    .map(function(is){ return { is:is, days:daysSince(is.date) }; })
+    .sort(function(a,b){ return b.days - a.days; });
+
+  // 当月の点検実施率
+  var ym = STATE.printMonth;
+  var daysM = daysInMonth(ym);
+  var doneDays = 0;
+  for(var dd=1; dd<=daysM; dd++){
+    var dk = ym+'-'+pad(dd);
+    var r = records[dk];
+    if(r && r.results && Object.keys(r.results).length>0) doneDays++;
+  }
+  var rate = daysM ? Math.round(doneDays/daysM*100) : 0;
+
+  var h = '';
+  h += '<div style="padding:14px;background:var(--c-bg2);border-radius:var(--r-lg);margin-bottom:14px;font-size:14px;color:var(--c-text2)">';
+  h += '<b>'+esc(m.name)+' 分析</b><br>これまでの点検データから、弱点箇所・対応の遅れ・点検の実施状況を集計します。';
+  h += '</div>';
+
+  // 当月実施率カード
+  var rateColor = rate>=90?'var(--c-success)':rate>=60?'var(--c-warn)':'var(--c-danger)';
+  h += '<div class="analysis-card">';
+  h += '<div class="analysis-title">📅 '+esc(ym.split('-')[1])+'月の点検実施率</div>';
+  h += '<div style="display:flex;align-items:center;gap:14px">';
+  h += '<div style="font-size:34px;font-weight:600;color:'+rateColor+'">'+rate+'%</div>';
+  h += '<div style="flex:1">';
+  h += '<div style="font-size:13px;color:var(--c-text2);margin-bottom:4px">'+doneDays+' / '+daysM+' 日 実施</div>';
+  h += '<div class="progress-bar" style="margin:0"><div class="progress-fill" style="width:'+rate+'%;background:'+rateColor+'"></div></div>';
+  h += '</div></div></div>';
+
+  // 長期未対応アラート
+  h += '<div class="analysis-card">';
+  h += '<div class="analysis-title">⏰ 対応が長引いている不具合</div>';
+  if(openIssues.length===0){
+    h += '<div style="font-size:13px;color:var(--c-text2)">未解決の不具合はありません 👍</div>';
+  } else {
+    var topOpen = openIssues.slice(0,5);
+    topOpen.forEach(function(o){
+      var is = o.is;
+      var col = o.days>=30?'var(--c-danger)':o.days>=14?'var(--c-warn)':'var(--c-text2)';
+      h += '<div style="display:flex;align-items:center;gap:10px;padding:8px 0;border-bottom:1px solid var(--c-bd)">';
+      h += '<div style="min-width:64px;font-size:18px;font-weight:600;color:'+col+'">'+o.days+'日</div>';
+      h += '<div style="flex:1;min-width:0"><div style="font-size:12px;color:var(--c-text2)">'+esc(is.place)+(is.side?' / '+esc(is.side):'')+' ・ No.'+esc(is.no)+'</div>';
+      h += '<div style="font-size:14px">'+esc(is.content)+'</div></div>';
+      h += '<div style="font-size:12px;color:var(--c-text3)">'+esc(is.status)+'</div>';
+      h += '</div>';
+    });
+    if(openIssues.length>5){ h += '<div style="font-size:12px;color:var(--c-text3);margin-top:6px">ほか '+(openIssues.length-5)+' 件(不具合リストで確認)</div>'; }
+  }
+  h += '</div>';
+
+  // NG発生ランキング
+  h += '<div class="analysis-card">';
+  h += '<div class="analysis-title">🔧 NGが多い箇所 (発生回数)</div>';
+  if(ranking.length===0){
+    h += '<div style="font-size:13px;color:var(--c-text2)">まだNGの記録がありません。</div>';
+  } else {
+    var maxc = ranking[0].count;
+    ranking.slice(0,10).forEach(function(r){
+      var w = maxc ? Math.round(r.count/maxc*100) : 0;
+      h += '<div style="margin-bottom:10px">';
+      h += '<div style="display:flex;justify-content:space-between;font-size:13px;margin-bottom:3px">';
+      h += '<span style="color:var(--c-text)">No.'+esc(r.no)+' '+esc(r.place)+(r.side?' ('+esc(r.side)+')':'')+'</span>';
+      h += '<span style="font-weight:600;color:var(--c-danger)">'+r.count+'回</span>';
+      h += '</div>';
+      h += '<div style="height:14px;background:var(--c-bg3);border-radius:7px;overflow:hidden"><div style="height:100%;width:'+w+'%;background:var(--c-danger);border-radius:7px"></div></div>';
+      h += '<div style="font-size:11px;color:var(--c-text3);margin-top:2px">'+esc(r.content)+'</div>';
+      h += '</div>';
+    });
+  }
+  h += '</div>';
+
+  return h;
 }
 
 function renderMonthly(){
@@ -1855,6 +2122,11 @@ function attachHandlers(){
   }
   if(el('btn-clearday')) el('btn-clearday').onclick = clearDay;
 
+  // 点検フィルタ + NGジャンプ
+  var fbs = document.querySelectorAll('[data-filter]');
+  for(var i=0;i<fbs.length;i++){ fbs[i].onclick = (function(f){ return function(){ setCheckFilter(f); }; })(fbs[i].getAttribute('data-filter')); }
+  if(el('btn-jump-ng')) el('btn-jump-ng').onclick = jumpToNG;
+
   // 見本写真サムネイル: タップで拡大(点検画面・項目管理リスト共通)
   var phs = document.querySelectorAll('[data-photo]');
   for(var i=0;i<phs.length;i++){
@@ -1874,6 +2146,8 @@ function attachHandlers(){
   for(var i=0;i<ias.length;i++){ ias[i].onchange = (function(id){ return function(){ updateIssue(id,'assignee',this.value,true); }; })(ias[i].getAttribute('data-issue-assignee')); }
   var iss = document.querySelectorAll('[data-issue-status]');
   for(var i=0;i<iss.length;i++){ iss[i].onchange = (function(id){ return function(){ updateIssue(id,'status',this.value); }; })(iss[i].getAttribute('data-issue-status')); }
+  var idl = document.querySelectorAll('[data-issue-delete]');
+  for(var i=0;i<idl.length;i++){ idl[i].onclick = (function(id){ return function(){ deleteIssueFromList(id); }; })(idl[i].getAttribute('data-issue-delete')); }
 
   // 項目タブ
   if(el('btn-additem')) el('btn-additem').onclick = addItem;
