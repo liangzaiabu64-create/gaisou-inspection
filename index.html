@@ -1902,7 +1902,7 @@ function issueCard(is){
   h += '</div>';
   // 不具合内容(編集可)
   h += '<div style="margin-top:10px">';
-  h += '<label style="font-size:12px;color:var(--c-danger);display:block;margin-bottom:2px">不具合内容</label>';
+  h += '<div style="display:flex;align-items:center;flex-wrap:wrap;margin-bottom:2px"><label style="font-size:12px;color:var(--c-danger)">不具合内容</label>'+defectNumBadge(parseDefectNumbers(is.detail))+'</div>';
   h += '<textarea data-issue-detail="'+is.id+'" placeholder="どのような異常か" style="width:100%;min-height:42px;padding:8px 10px;border:1px solid var(--c-danger-bd);border-radius:var(--r-md);font-size:14px;font-family:var(--font);background:var(--c-danger-bg);color:var(--c-text);box-sizing:border-box;resize:vertical">'+esc(is.detail)+'</textarea>';
   h += '</div>';
   // 対応コメント(編集可)
@@ -1969,7 +1969,7 @@ function watchCard(w){
   h += '</div>';
   // 観察内容(編集可)
   h += '<div style="margin-top:10px">';
-  h += '<label style="font-size:12px;color:var(--c-warn);display:block;margin-bottom:2px">観察内容</label>';
+  h += '<div style="display:flex;align-items:center;flex-wrap:wrap;margin-bottom:2px"><label style="font-size:12px;color:var(--c-warn)">観察内容</label>'+defectNumBadge(parseDefectNumbers(w.detail))+'</div>';
   h += '<textarea data-watch-detail="'+w.id+'" placeholder="どのような状態か" style="width:100%;min-height:42px;padding:8px 10px;border:1px solid #FAC775;border-radius:var(--r-md);font-size:14px;font-family:var(--font);background:var(--c-warn-bg);color:var(--c-text);box-sizing:border-box;resize:vertical">'+esc(w.detail)+'</textarea>';
   h += '</div>';
   // 対応コメント(編集可)
@@ -2241,7 +2241,428 @@ function renderAnalysis(){
   }
   h += '</div>';
 
+  // ============================================================
+  // 追加分析① 予兆(△)→故障(×) リードタイム
+  // ============================================================
+  var triRows = computeTriToNg();
+  h += '<div class="analysis-card">';
+  h += '<div class="analysis-title">⚠ 予兆(△)から故障(×)までの日数</div>';
+  if(triRows.length===0){
+    h += '<div style="font-size:13px;color:var(--c-text2)">まだ△→×の事例がありません。△が出た箇所が後日×になると、ここに「予兆から何日で故障したか」が集計されます。</div>';
+  } else {
+    // 転落率の高い順 → リードタイム中央値の短い順
+    triRows.sort(function(a,b){
+      if(b.fallRate !== a.fallRate) return b.fallRate - a.fallRate;
+      var am = a.medLead==null?9999:a.medLead, bm = b.medLead==null?9999:b.medLead;
+      return am - bm;
+    });
+    h += '<div style="font-size:12px;color:var(--c-text2);margin-bottom:8px">△が出てから×に至るまでの日数です。「△が出たら何日以内に手を打つべきか」の目安になります。</div>';
+    triRows.slice(0,10).forEach(function(r){
+      var rateCol = r.fallRate>=70?'var(--c-danger)':r.fallRate>=40?'var(--c-warn)':'var(--c-text2)';
+      h += '<div style="display:flex;align-items:center;gap:10px;padding:8px 0;border-bottom:1px solid var(--c-bd)">';
+      h += '<div style="flex:1;min-width:0"><div style="font-size:12px;color:var(--c-text2)">'+esc(r.place)+(r.side?' / '+esc(r.side):'')+' ・ No.'+esc(r.no)+'</div>';
+      h += '<div style="font-size:14px">'+esc(r.content)+'</div></div>';
+      h += '<div style="text-align:right;min-width:130px">';
+      if(r.medLead!=null){
+        h += '<div style="font-size:13px"><b>中央 '+r.medLead+'日</b> / 最短 '+r.minLead+'日</div>';
+      } else {
+        h += '<div style="font-size:13px;color:var(--c-text3)">×到達なし</div>';
+      }
+      h += '<div style="font-size:12px;color:'+rateCol+';font-weight:500">転落率 '+r.fallRate+'% (△'+r.triCount+'件中'+r.fell+'件)</div>';
+      h += '</div></div>';
+    });
+    var worst = triRows[0];
+    if(worst && worst.medLead!=null){
+      h += '<div style="font-size:12px;color:var(--c-text2);margin-top:8px;padding:8px;background:var(--c-warn-bg);border-radius:var(--r-md)">';
+      h += '💡 最も注意すべきは「'+esc(worst.content)+'」。△が出たら中央 '+worst.medLead+'日(最短 '+worst.minLead+'日)で×に至った実績があります。';
+      h += '</div>';
+    }
+  }
+  h += '</div>';
+
+  // ============================================================
+  // 追加分析② 再発・故障間隔
+  // ============================================================
+  var recRows = computeRecurrence();
+  h += '<div class="analysis-card">';
+  h += '<div class="analysis-title">🔁 繰り返し発生している箇所 (再発)</div>';
+  var recurOnly = recRows.filter(function(r){ return r.recur>=1; });
+  if(recurOnly.length===0){
+    h += '<div style="font-size:13px;color:var(--c-text2)">同じ箇所が繰り返しNGになった事例はまだありません 👍</div>';
+  } else {
+    recurOnly.sort(function(a,b){ return b.recur - a.recur; });
+    h += '<div style="font-size:12px;color:var(--c-text2);margin-bottom:8px">完了をまたいで再びNGになった箇所です。再発が多い・間隔が縮んでいる箇所は、根本対策が必要なサインです。</div>';
+    recurOnly.slice(0,10).forEach(function(r){
+      h += '<div style="display:flex;align-items:center;gap:10px;padding:8px 0;border-bottom:1px solid var(--c-bd)">';
+      h += '<div style="flex:1;min-width:0"><div style="font-size:12px;color:var(--c-text2)">'+esc(r.place)+(r.side?' / '+esc(r.side):'')+' ・ No.'+esc(r.no)+'</div>';
+      h += '<div style="font-size:14px">'+esc(r.content)+'</div></div>';
+      h += '<div style="text-align:right;min-width:120px">';
+      h += '<div style="font-size:13px"><b>再発 '+r.recur+'回</b> (計'+r.occurrences+'回)</div>';
+      if(r.avgGap!=null){
+        h += '<div style="font-size:12px;color:var(--c-text2)">平均間隔 '+r.avgGap+'日';
+        if(r.accelerating){ h += ' <span style="color:var(--c-danger);font-weight:600">⚠加速</span>'; }
+        h += '</div>';
+      }
+      h += '</div></div>';
+    });
+  }
+  h += '</div>';
+
+  // ============================================================
+  // 追加分析③ 4ライン横断ヒートマップ(同一箇所のNG発生率)
+  // ============================================================
+  var matrix = computeCrossLineMatrix();
+  h += '<div class="analysis-card">';
+  h += '<div class="analysis-title">📊 4ライン比較 (同一箇所のNG発生率)</div>';
+  var mids = ['g2','g3','g4','g5'];
+  var midLabel = { g2:'2号', g3:'3号', g4:'4号', g5:'5号' };
+  // 行配列化 + 各号のNG率算出
+  var rows = [];
+  Object.keys(matrix).forEach(function(key){
+    var row = matrix[key];
+    var cells = {}, maxRate = -1, anyData = false;
+    mids.forEach(function(mid){
+      var c = row.cells[mid];
+      if(c && c.chk>0){ var rate = Math.round(c.ng/c.chk*100); cells[mid] = { rate:rate, ng:c.ng, chk:c.chk }; if(rate>maxRate) maxRate=rate; anyData=true; }
+      else { cells[mid] = null; }
+    });
+    if(anyData) rows.push({ label:row.label, content:row.content, side:row.side, cells:cells, maxRate:maxRate });
+  });
+  if(rows.length===0){
+    h += '<div style="font-size:13px;color:var(--c-text2)">比較できるデータがまだありません。各号で点検が記録されると、同じ箇所のNG発生率を号ごとに比較できます。</div>';
+  } else {
+    rows.sort(function(a,b){ return b.maxRate - a.maxRate; });
+    h += '<div style="font-size:12px;color:var(--c-text2);margin-bottom:8px">同じ点検箇所のNG発生率を号ごとに比較します。特定の号だけ高い箇所は、その設備固有の問題の可能性があります。</div>';
+    h += '<div style="overflow-x:auto">';
+    h += '<table style="width:100%;border-collapse:collapse;font-size:12px;min-width:480px">';
+    h += '<thead><tr>';
+    h += '<th style="text-align:left;padding:6px 8px;border-bottom:2px solid var(--c-bd2);position:sticky;left:0;background:var(--c-bg)">箇所</th>';
+    mids.forEach(function(mid){ h += '<th style="padding:6px 8px;border-bottom:2px solid var(--c-bd2);text-align:center;min-width:64px">'+midLabel[mid]+'</th>'; });
+    h += '</tr></thead><tbody>';
+    rows.slice(0,15).forEach(function(r){
+      h += '<tr>';
+      h += '<td style="padding:6px 8px;border-bottom:1px solid var(--c-bd);position:sticky;left:0;background:var(--c-bg)"><div style="font-size:11px;color:var(--c-text2)">'+esc(r.label)+(r.side?' / '+esc(r.side):'')+'</div><div style="font-size:13px">'+esc(r.content)+'</div></td>';
+      mids.forEach(function(mid){
+        var c = r.cells[mid];
+        if(c==null){ h += '<td style="padding:6px 8px;border-bottom:1px solid var(--c-bd);text-align:center;color:var(--c-text3)">—</td>'; }
+        else {
+          var bg = heatColor(c.rate);
+          var fg = c.rate>=50 ? '#fff' : 'var(--c-text)';
+          h += '<td style="padding:6px 8px;border-bottom:1px solid var(--c-bd);text-align:center;background:'+bg+';color:'+fg+'"><b>'+c.rate+'%</b><div style="font-size:10px;opacity:0.8">'+c.ng+'/'+c.chk+'</div></td>';
+        }
+      });
+      h += '</tr>';
+    });
+    h += '</tbody></table></div>';
+    h += '<div style="font-size:12px;color:var(--c-text2);margin-top:8px;padding:8px;background:var(--c-bg2);border-radius:var(--r-md)">💡 1つの号だけ赤い箇所は、その設備固有の問題かもしれません。低い号の状態を参考に、点検・対策を他号へ展開できます。</div>';
+  }
+  h += '</div>';
+
+  // ============================================================
+  // 追加分析④ ズレ推移(不具合内容の「41→42」等を解析)
+  // ============================================================
+  var deltaRows = computeDeltaTrends();
+  h += '<div class="analysis-card">';
+  h += '<div class="analysis-title">📐 寸法・数値のズレ推移</div>';
+  if(deltaRows.length===0){
+    h += '<div style="font-size:13px;color:var(--c-text2)">不具合内容に「41→42」のように数値を記入すると、同じ箇所のズレの推移をここで追えます。</div>';
+  } else {
+    // 一方向にズレ続けている(累積)箇所を上に
+    deltaRows.sort(function(a,b){
+      if(a.monotonic!==b.monotonic) return a.monotonic?-1:1;
+      return Math.abs(b.totalDrift) - Math.abs(a.totalDrift);
+    });
+    h += '<div style="font-size:12px;color:var(--c-text2);margin-bottom:8px">記入された数値(基準→実測)の推移です。一方向にズレ続けている箇所は、バラツキではなく劣化が進んでいるサインかもしれません。</div>';
+    deltaRows.slice(0,10).forEach(function(r){
+      h += '<div style="padding:8px 0;border-bottom:1px solid var(--c-bd)">';
+      h += '<div style="display:flex;justify-content:space-between;align-items:flex-start;gap:8px">';
+      h += '<div style="flex:1;min-width:0"><div style="font-size:12px;color:var(--c-text2)">'+esc(r.place)+(r.side?' / '+esc(r.side):'')+' ・ No.'+esc(r.no)+'</div>';
+      h += '<div style="font-size:14px">'+esc(r.content)+'</div></div>';
+      h += '<div style="text-align:right;min-width:120px">';
+      if(r.monotonic){
+        var dcol = r.dir==='増加'?'var(--c-danger)':'var(--c-info)';
+        h += '<div style="font-size:12px;color:'+dcol+';font-weight:600">'+r.dir+'方向に累積</div>';
+      } else {
+        h += '<div style="font-size:12px;color:var(--c-text3)">バラツキ</div>';
+      }
+      h += '<div style="font-size:12px;color:var(--c-text2)">最新 '+r.lastTo+' / 累計 '+(r.totalDrift>0?'+':'')+r.totalDrift+'</div>';
+      h += '</div></div>';
+      // 推移の数値列(最大8件)
+      var seq = r.points.slice(-8).map(function(p){ return (p.date?p.date.slice(5):'')+' '+p.to; }).join('  →  ');
+      h += '<div style="font-size:11px;color:var(--c-text3);margin-top:4px">'+esc(seq)+'</div>';
+      h += '</div>';
+    });
+    var topD = deltaRows[0];
+    if(topD && topD.monotonic){
+      h += '<div style="font-size:12px;color:var(--c-text2);margin-top:8px;padding:8px;background:var(--c-warn-bg);border-radius:var(--r-md)">';
+      h += '💡 「'+esc(topD.content)+'」は'+topD.dir+'方向に'+(topD.totalDrift>0?'+':'')+topD.totalDrift+'ズレが累積しています。公差に近づく前に点検・調整を検討してください。';
+      h += '</div>';
+    }
+  }
+  h += '</div>';
+
+  // ============================================================
+  // 追加分析⑤ 不良回数の推移(「NG7回」等を解析。停止ログの代理指標)
+  // ============================================================
+  var countRows = computeCountTrends();
+  h += '<div class="analysis-card">';
+  h += '<div class="analysis-title">📈 不良回数の推移</div>';
+  if(countRows.length===0){
+    h += '<div style="font-size:13px;color:var(--c-text2)">不具合内容に「NG7回」のように回数を記入すると、箇所ごとの不良発生数をここで追えます。</div>';
+  } else {
+    countRows.sort(function(a,b){ return b.total - a.total; });
+    h += '<div style="font-size:12px;color:var(--c-text2);margin-bottom:8px">記入された不良回数の集計です。発生数が多い・増えている箇所は、設備の不安定さを示します。</div>';
+    countRows.slice(0,10).forEach(function(r){
+      h += '<div style="padding:8px 0;border-bottom:1px solid var(--c-bd)">';
+      h += '<div style="display:flex;justify-content:space-between;align-items:flex-start;gap:8px">';
+      h += '<div style="flex:1;min-width:0"><div style="font-size:12px;color:var(--c-text2)">'+esc(r.place)+(r.side?' / '+esc(r.side):'')+' ・ No.'+esc(r.no)+'</div>';
+      h += '<div style="font-size:14px">'+esc(r.content)+'</div></div>';
+      h += '<div style="text-align:right;min-width:110px">';
+      h += '<div style="font-size:13px;color:var(--c-danger);font-weight:600">計 '+r.total+'回</div>';
+      h += '<div style="font-size:12px;color:var(--c-text2)">最多 '+r.max+'回'+(r.increasing?' <span style="color:var(--c-danger);font-weight:600">⚠増加</span>':'')+'</div>';
+      h += '</div></div>';
+      var seq2 = r.points.slice(-8).map(function(p){ return (p.date?p.date.slice(5):'')+(p.time?' '+p.time:'')+':'+p.count+'回'; }).join('  /  ');
+      h += '<div style="font-size:11px;color:var(--c-text3);margin-top:4px">'+esc(seq2)+'</div>';
+      h += '</div>';
+    });
+  }
+  h += '</div>';
+
   return h;
+}
+
+// ============================================================
+// 分析の集計関数(予知保全) ── クライアント側集計のみ・GAS不要
+// ============================================================
+// 日数差・中央値・平均・日付正規化(命名を一意にして衝突回避)
+function _abDaysBetween(a, b){
+  return Math.round((new Date(b+'T00:00:00') - new Date(a+'T00:00:00')) / 86400000);
+}
+function _abMedian(arr){
+  if(!arr.length) return null;
+  var a = arr.slice().sort(function(x,y){ return x-y; });
+  var m = Math.floor(a.length/2);
+  return a.length%2 ? a[m] : Math.round((a[m-1]+a[m])/2);
+}
+function _abAvg(arr){ if(!arr.length) return null; var s=0; for(var i=0;i<arr.length;i++) s+=arr[i]; return s/arr.length; }
+function _abUniqueSortedDates(ds){
+  var seen = {}, out = [];
+  ds.forEach(function(d){ if(d && !seen[d]){ seen[d]=1; out.push(d); } });
+  out.sort();
+  return out;
+}
+
+// ① △→× リードタイム・転落率(現在の設備)
+function computeTriToNg(){
+  var records = getRecords(), items = getItems();
+  // item -> [{date,v}] 日付昇順
+  var series = {};
+  Object.keys(records).sort().forEach(function(date){
+    var r = records[date]; if(!r || !r.results) return;
+    for(var id in r.results){ (series[id]=series[id]||[]).push({ date:date, v:r.results[id] }); }
+  });
+  var rows = [];
+  items.forEach(function(it){
+    var s = series[it.id] || [];
+    var triCount=0, fell=0, leads=[];
+    for(var i=0;i<s.length;i++){
+      if(s[i].v!=='tri') continue;
+      triCount++;
+      for(var j=i+1;j<s.length;j++){
+        if(s[j].v==='ng'){ fell++; leads.push(_abDaysBetween(s[i].date, s[j].date)); break; }
+        // 次に△や〇が来ても、さらに先の×を探し続ける
+      }
+    }
+    if(triCount>0){
+      rows.push({ no:it.no, place:it.place, side:it.side, content:it.content,
+        triCount:triCount, fell:fell,
+        fallRate: Math.round(fell/triCount*100),
+        medLead: leads.length ? _abMedian(leads) : null,
+        minLead: leads.length ? Math.min.apply(null, leads) : null });
+    }
+  });
+  return rows;
+}
+
+// ② 再発・故障間隔(現在の設備, 完了済み不具合も含む)
+function computeRecurrence(){
+  var all = getIssues().concat(getDoneIssues());
+  var byItem = {};
+  all.forEach(function(is){
+    var k = is.itemId || ('__'+is.id);
+    (byItem[k]=byItem[k]||[]).push(is.date);
+  });
+  var rows = [];
+  Object.keys(byItem).forEach(function(k){
+    var ds = _abUniqueSortedDates(byItem[k]);
+    if(ds.length<1) return;
+    var gaps = [];
+    for(var i=1;i<ds.length;i++) gaps.push(_abDaysBetween(ds[i-1], ds[i]));
+    var any = null;
+    for(var x=0;x<all.length;x++){ if((all[x].itemId||('__'+all[x].id))===k){ any=all[x]; break; } }
+    any = any || {};
+    var avgGap = gaps.length ? Math.round(_abAvg(gaps)) : null;
+    var lastGap = gaps.length ? gaps[gaps.length-1] : null;
+    rows.push({ no:any.no, place:any.place, side:any.side, content:any.content,
+      occurrences: ds.length, recur: ds.length-1,
+      avgGap: avgGap, lastGap: lastGap,
+      accelerating: (gaps.length>=2 && lastGap < _abAvg(gaps)) });
+  });
+  return rows;
+}
+
+// ③ 4ライン横断: place+content をキーに号別のng/tri/点検回数を集計
+function computeCrossLineMatrix(){
+  var mids = ['g2','g3','g4','g5'];
+  var matrix = {};
+  mids.forEach(function(mid){
+    var recs = STATE.allRecords[mid] || {};
+    var items = STATE.allItems[mid] || [];
+    var meta = {}; items.forEach(function(it){ meta[it.id] = it; });
+    var agg = {};
+    for(var d in recs){
+      var r = recs[d]; if(!r || !r.results) continue;
+      for(var id in r.results){
+        var v = r.results[id];
+        var a = agg[id] = agg[id] || { ng:0, tri:0, chk:0 };
+        a.chk++;
+        if(v==='ng') a.ng++; else if(v==='tri') a.tri++;
+      }
+    }
+    for(var id2 in agg){
+      var it = meta[id2]; if(!it) continue;
+      var key = (it.place||'').trim() + '┃' + (it.content||'').trim();
+      var row = matrix[key] = matrix[key] || { label:it.place, content:it.content, side:it.side, cells:{} };
+      row.cells[mid] = agg[id2];
+    }
+  });
+  return matrix;
+}
+
+// ヒートマップのセル背景色(NG率0%→白, 高→赤)
+function heatColor(rate){
+  if(rate<=0) return 'var(--c-bg)';
+  if(rate<10) return '#fde8e8';
+  if(rate<25) return '#f9c9c9';
+  if(rate<50) return '#f29a9a';
+  if(rate<75) return '#e96a6a';
+  return '#d83b3b';
+}
+
+// ============================================================
+// 不具合内容テキストからの数値自動抽出(A案: 現場の自由文をそのまま解析)
+// ============================================================
+// 例) "41→42"  "119.0 → 119.6"  "41-42"  → ズレ型 {kind:'delta', from, to, diff}
+//     "NG7回"  "10:30時点で化粧箱-NG7回"  "7回" → カウント型 {kind:'count', count, time}
+// 取れなければ null
+function parseDefectNumbers(text){
+  if(!text) return null;
+  var s = String(text);
+  // --- ズレ型: A→B / A-B / A〜B (小数可、矢印/ハイフン/波/空白を許容) ---
+  // 全角矢印・半角矢印・→・⇒・- などを区切りに
+  var mDelta = s.match(/(-?\d+(?:\.\d+)?)\s*(?:→|⇒|->|=>|〜|~|―|−|-)\s*(-?\d+(?:\.\d+)?)/);
+  if(mDelta){
+    var from = parseFloat(mDelta[1]);
+    var to   = parseFloat(mDelta[2]);
+    if(!isNaN(from) && !isNaN(to)){
+      return { kind:'delta', from:from, to:to, diff:Math.round((to-from)*1000)/1000 };
+    }
+  }
+  // --- カウント型: 数字+回 / NG数字 ---
+  var time = null;
+  var mTime = s.match(/(\d{1,2}):(\d{2})/);
+  if(mTime){ time = mTime[1].padStart(2,'0')+':'+mTime[2]; }
+  var mCount = s.match(/(\d+)\s*回/);          // 「7回」
+  if(!mCount) mCount = s.match(/NG\s*(\d+)/i);   // 「NG7」
+  if(mCount){
+    var c = parseInt(mCount[1],10);
+    if(!isNaN(c)) return { kind:'count', count:c, time:time };
+  }
+  return null;
+}
+
+// 抽出結果を短いバッジ文字列にする(カード表示用)
+function defectNumBadge(parsed){
+  if(!parsed) return '';
+  if(parsed.kind==='delta'){
+    var sign = parsed.diff>0 ? '+' : '';
+    var col = parsed.diff===0 ? 'var(--c-text2)' : 'var(--c-warn)';
+    return '<span style="display:inline-block;margin-left:8px;padding:2px 8px;border-radius:var(--r-md);background:var(--c-warn-bg);color:'+col+';font-size:12px;font-weight:600">基準 '+parsed.from+' → 実測 '+parsed.to+' ('+sign+parsed.diff+')</span>';
+  }
+  if(parsed.kind==='count'){
+    return '<span style="display:inline-block;margin-left:8px;padding:2px 8px;border-radius:var(--r-md);background:var(--c-danger-bg);color:var(--c-danger);font-size:12px;font-weight:600">'+(parsed.time?parsed.time+' ':'')+parsed.count+'回</span>';
+  }
+  return '';
+}
+
+// ④ ズレ推移分析: 同一項目のズレ(delta)を発生日順に並べ、累積劣化かを見る(現設備)
+//    不具合・経過観察の両方の detail を解析対象にする
+function computeDeltaTrends(){
+  var list = getIssues().concat(getDoneIssues()).concat(getWatches()).concat(getWatchDone());
+  var byItem = {};
+  list.forEach(function(r){
+    var pr = parseDefectNumbers(r.detail);
+    if(!pr || pr.kind!=='delta') return;
+    var k = r.itemId || ('__'+r.id);
+    (byItem[k]=byItem[k]||{ no:r.no, place:r.place, side:r.side, content:r.content, points:[] });
+    byItem[k].points.push({ date:r.date, from:pr.from, to:pr.to, diff:pr.diff });
+  });
+  var rows = [];
+  Object.keys(byItem).forEach(function(k){
+    var o = byItem[k];
+    // 日付昇順、同日は1件目を採用
+    o.points.sort(function(a,b){ return (a.date||'').localeCompare(b.date||''); });
+    if(o.points.length===0) return;
+    var diffs = o.points.map(function(p){ return p.diff; });
+    // 一方向性: 全てが同符号(>0 or <0)で2点以上なら「累積」
+    var allPos = diffs.every(function(d){ return d>0; });
+    var allNeg = diffs.every(function(d){ return d<0; });
+    var monotonic = (o.points.length>=2 && (allPos||allNeg));
+    // 最新の実測値・累計ズレ
+    var last = o.points[o.points.length-1];
+    rows.push({
+      no:o.no, place:o.place, side:o.side, content:o.content,
+      count:o.points.length,
+      lastTo:last.to, lastDiff:last.diff,
+      totalDrift: Math.round((last.to - o.points[0].from)*1000)/1000,
+      monotonic:monotonic, dir:(allPos?'増加':allNeg?'減少':'混在'),
+      points:o.points
+    });
+  });
+  return rows;
+}
+
+// ⑤ カウント時系列分析: count型を項目別・日別に集計(現設備)
+function computeCountTrends(){
+  var list = getIssues().concat(getDoneIssues()).concat(getWatches()).concat(getWatchDone());
+  var byItem = {};
+  list.forEach(function(r){
+    var pr = parseDefectNumbers(r.detail);
+    if(!pr || pr.kind!=='count') return;
+    var k = r.itemId || ('__'+r.id);
+    (byItem[k]=byItem[k]||{ no:r.no, place:r.place, side:r.side, content:r.content, points:[] });
+    byItem[k].points.push({ date:r.date, count:pr.count, time:pr.time });
+  });
+  var rows = [];
+  Object.keys(byItem).forEach(function(k){
+    var o = byItem[k];
+    o.points.sort(function(a,b){ return (a.date||'').localeCompare(b.date||''); });
+    if(o.points.length===0) return;
+    var counts = o.points.map(function(p){ return p.count; });
+    var total = counts.reduce(function(s,x){ return s+x; }, 0);
+    var maxc = Math.max.apply(null, counts);
+    // 増加傾向: 直近が平均より多い
+    var avg = total / counts.length;
+    var last = o.points[o.points.length-1];
+    rows.push({
+      no:o.no, place:o.place, side:o.side, content:o.content,
+      days:o.points.length, total:total, max:maxc,
+      lastCount:last.count, lastDate:last.date,
+      increasing:(o.points.length>=2 && last.count > avg),
+      points:o.points
+    });
+  });
+  return rows;
 }
 
 function renderMonthly(){
