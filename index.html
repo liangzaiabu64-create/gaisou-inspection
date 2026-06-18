@@ -2188,6 +2188,83 @@ function renderAnalysis(){
   h += '<b>'+esc(m.name)+' 分析</b><br>これまでの点検データから、弱点箇所・対応の遅れ・点検の実施状況を集計します。';
   h += '</div>';
 
+  // ============================================================
+  // F4 頭出しKPIストリップ(既存集計の要約・新規入力なし)
+  // ============================================================
+  (function(){
+    var openIssues = getIssues().filter(function(is){ return is.status!=='完了'; }).length;
+    var openWatches = getWatches().filter(function(w){ return w.status!=='完了'; }).length;
+    var doneCnt = getDoneIssues().length;
+    var compTotal = doneCnt + openIssues;
+    var compRate = compTotal > 0 ? Math.round(doneCnt / compTotal * 100) : null;
+
+    // 予兆検知率(recall・新規小集計)
+    var rec = computeTriRecall();
+
+    // 再発率: computeRecurrence() を再利用(再計算しない)
+    var recRows = computeRecurrence();
+    var recurItems = 0, occItems = 0;
+    recRows.forEach(function(r){ if(r.occurrences>=1){ occItems++; if(r.recur>=1) recurItems++; } });
+    var recurRate = occItems > 0 ? Math.round(recurItems / occItems * 100) : null;
+
+    // 平均対応日数(任意): 完了済み不具合の 発生日→完了日
+    var doneLeads = [];
+    getDoneIssues().forEach(function(is){
+      if(is.date && is.doneDate){ var d = _abDaysBetween(is.date, is.doneDate); if(d>=0) doneLeads.push(d); }
+    });
+    var avgFix = doneLeads.length ? Math.round(_abAvg(doneLeads)) : null;
+
+    // KPIタイル生成ヘルパ(値・ラベル・補足・色)
+    function tile(label, value, sub, color){
+      var v = '<div style="padding:10px 12px;background:var(--c-bg);border:1px solid var(--c-bd);border-radius:var(--r-md);min-width:128px;flex:1">';
+      v += '<div style="font-size:11px;color:var(--c-text2);margin-bottom:2px">'+label+'</div>';
+      v += '<div style="font-size:22px;font-weight:600;color:'+(color||'var(--c-text)')+'">'+value+'</div>';
+      if(sub) v += '<div style="font-size:10px;color:var(--c-text3);margin-top:2px">'+sub+'</div>';
+      v += '</div>';
+      return v;
+    }
+
+    h += '<div class="analysis-card">';
+    h += '<div class="analysis-title">📊 サマリー（'+esc(m.name)+'）</div>';
+    h += '<div style="display:flex;flex-wrap:wrap;gap:8px">';
+
+    // 未対応×
+    h += tile('未対応の不具合 (×)', openIssues+'件', null, openIssues>0?'var(--c-danger)':'var(--c-text)');
+    // 未対応△
+    h += tile('未対応の経過観察 (△)', openWatches+'件', null, openWatches>0?'var(--c-warn)':'var(--c-text)');
+    // 対応完了率
+    h += tile('対応完了率', compRate==null?'—':compRate+'%', compRate==null?'データなし':('完了'+doneCnt+' / 計'+compTotal),
+              (compRate!=null && compRate>=70)?'var(--c-success)':'var(--c-text)');
+
+    // 予兆検知率(recall) ── 小標本ガード
+    if(rec.recall==null){
+      h += tile('予兆検知率', '—', '×の記録なし', 'var(--c-text3)');
+    } else if(rec.smallSample){
+      h += tile('予兆検知率', rec.recall+'%', '参考(n='+rec.totalIncidents+') 検知'+rec.detected+'/'+rec.totalIncidents, 'var(--c-text2)');
+    } else {
+      h += tile('予兆検知率', rec.recall+'%', '検知'+rec.detected+' / ×'+rec.totalIncidents+'件',
+                rec.recall>=70?'var(--c-success)':rec.recall>=40?'var(--c-warn)':'var(--c-danger)');
+    }
+    // 平均予兆リードタイム
+    h += tile('平均予兆リードタイム', rec.avgLead==null?'—':rec.avgLead+'日',
+              rec.avgLead==null?'予兆検知なし':'△→×の平均', 'var(--c-text)');
+    // 再発率 ── 小標本ガード(対象項目数<5)
+    if(recurRate==null){
+      h += tile('再発率', '—', '不具合なし', 'var(--c-text3)');
+    } else if(occItems < 5){
+      h += tile('再発率', recurRate+'%', '参考(n='+occItems+') 再発'+recurItems+'/'+occItems, 'var(--c-text2)');
+    } else {
+      h += tile('再発率', recurRate+'%', '再発'+recurItems+' / 対象'+occItems+'項目',
+                recurRate>=50?'var(--c-danger)':'var(--c-text)');
+    }
+    // 平均対応日数(任意)
+    h += tile('平均対応日数', avgFix==null?'—':avgFix+'日', avgFix==null?'完了実績なし':'発生→完了', 'var(--c-text)');
+
+    h += '</div>';
+    h += '<div style="font-size:11px;color:var(--c-text3);margin-top:8px">※「予兆検知率」は×(故障)のうち事前に△(予兆)があった割合です。母数が少ない(5件未満)指標は «参考» と表示しています。</div>';
+    h += '</div>';
+  })();
+
   // 当月実施率カード
   var rateColor = rate>=90?'var(--c-success)':rate>=60?'var(--c-warn)':'var(--c-danger)';
   h += '<div class="analysis-card">';
@@ -2526,6 +2603,70 @@ function computeTriToNg(){
     });
   });
   return rows;
+}
+
+// 予兆検知率(recall)の集計 ── F4 KPIストリップ用の新規小集計
+// 【観点】computeTriToNg が「△の転落率(precision)」を出すのに対し、
+//        こちらは「×のうち事前に△があった割合(recall)」を出す(別物)。
+// 【データソース】△=経過観察(watch)の発生日 / ×=記録(records)の'ng'日(computeTriToNgと同じ)
+// 【×インシデント】同一項目で連続日(既定1日以内)の×は1件にまとめる。
+// 【予兆あり】同項目で「×発生日以前 かつ 窓(既定90日)以内」に△があれば予兆あり。
+function computeTriRecall(){
+  var WINDOW_DAYS = 90;   // △を予兆とみなす遡及窓
+  var GAP_DAYS = 1;       // この日数以内に連続する×は同一インシデントに集約
+  var MIN_N = 5;          // 小標本ガードのしきい値(母数<5は参考値)
+
+  // △発生日: 項目ID -> [日付昇順]
+  var triByItem = {};
+  getWatches().concat(getWatchDone()).forEach(function(w){
+    if(!w.itemId || !w.date) return;
+    (triByItem[w.itemId] = triByItem[w.itemId] || []).push(w.date);
+  });
+  Object.keys(triByItem).forEach(function(k){ triByItem[k] = _abUniqueSortedDates(triByItem[k]); });
+
+  // ×発生日: 項目ID -> [日付昇順]
+  var ngByItem = {};
+  var records = getRecords();
+  Object.keys(records).forEach(function(date){
+    var r = records[date]; if(!r || !r.results) return;
+    for(var id in r.results){
+      if(r.results[id] === 'ng'){ (ngByItem[id] = ngByItem[id] || []).push(date); }
+    }
+  });
+
+  var totalIncidents = 0, detected = 0, leads = [];
+  Object.keys(ngByItem).forEach(function(id){
+    var ngs = _abUniqueSortedDates(ngByItem[id]);
+    var tris = triByItem[id] || [];
+    // 連続日の×を1インシデントに集約 → 各インシデントの起点日(最初の×)を採用
+    var incidentStarts = [];
+    for(var i = 0; i < ngs.length; i++){
+      if(i === 0 || _abDaysBetween(ngs[i-1], ngs[i]) > GAP_DAYS){
+        incidentStarts.push(ngs[i]);
+      }
+    }
+    incidentStarts.forEach(function(start){
+      totalIncidents++;
+      // start 以前・窓以内の△を探す(最も近い△でリードタイム算出)
+      var best = null;
+      for(var j = 0; j < tris.length; j++){
+        var back = _abDaysBetween(tris[j], start); // start - tri (>=0で過去)
+        if(back >= 0 && back <= WINDOW_DAYS){
+          if(best === null || back < best) best = back;
+        }
+      }
+      if(best !== null){ detected++; leads.push(best); }
+    });
+  });
+
+  return {
+    totalIncidents: totalIncidents,
+    detected: detected,
+    recall: totalIncidents > 0 ? Math.round(detected / totalIncidents * 100) : null,
+    avgLead: leads.length ? Math.round(_abAvg(leads)) : null,
+    smallSample: (totalIncidents < MIN_N),
+    minN: MIN_N
+  };
 }
 
 // ② 再発・故障間隔(現在の設備, 完了済み不具合も含む)
