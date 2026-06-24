@@ -1,0 +1,3287 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>外装工程 日常点検チェックリスト</title>
+<style>
+  :root {
+    --c-bg: #ffffff; --c-bg2: #f5f4ef; --c-bg3: #ebe9e2;
+    --c-info-bg: #e6f1fb; --c-danger-bg: #fcebeb; --c-success-bg: #eaf3de; --c-warn-bg: #faeeda;
+    --c-text: #1a1a1a; --c-text2: #5f5e5a; --c-text3: #888780;
+    --c-info: #185fa5; --c-danger: #a32d2d; --c-success: #3b6d11; --c-warn: #854f0b;
+    --c-bd: rgba(0,0,0,0.15); --c-bd2: rgba(0,0,0,0.3);
+    --c-info-bd: #b5d4f4; --c-danger-bd: #f7c1c1; --c-success-bd: #c0dd97;
+    --font: -apple-system, BlinkMacSystemFont, "Helvetica Neue", "Hiragino Sans", "Hiragino Kaku Gothic ProN", "Yu Gothic", Meiryo, sans-serif;
+    --r-md: 8px; --r-lg: 12px;
+  }
+  * { box-sizing: border-box; }
+  body { margin: 0; padding: 16px; font-family: var(--font); background: var(--c-bg3); color: var(--c-text); }
+  #wrap { max-width: 1100px; margin: 0 auto; background: var(--c-bg); border-radius: var(--r-lg); padding: 20px; min-height: 200px; }
+
+  @media print {
+    body * { visibility: hidden; }
+    #print-area, #print-area * { visibility: visible; }
+    #print-area { position: absolute; left: 0; top: 0; width: 100%; }
+    .no-print { display: none !important; }
+  }
+  #print-area { display: none; }
+  #print-area.show { display: block; }
+
+  .err-box { padding: 20px; background: var(--c-danger-bg); border: 1px solid var(--c-danger-bd); border-radius: var(--r-lg); color: var(--c-danger); margin-bottom: 16px; }
+  .err-box h3 { margin: 0 0 8px; }
+  .err-box pre { background: rgba(0,0,0,0.05); padding: 10px; border-radius: 6px; font-size: 12px; white-space: pre-wrap; word-break: break-all; }
+
+  .machine-selector { display: flex; gap: 8px; margin-bottom: 14px; padding: 6px; background: var(--c-bg3); border-radius: var(--r-lg); }
+  .machine-tab { flex: 1; padding: 14px 18px; font-size: 16px; font-weight: 500; border: none; border-radius: var(--r-md); background: transparent; color: var(--c-text2); cursor: pointer; font-family: var(--font); }
+  .machine-tab.active { background: var(--c-bg); color: var(--c-text); box-shadow: 0 1px 3px rgba(0,0,0,0.1); }
+  .machine-tab .badge { display: inline-block; padding: 2px 8px; font-size: 11px; background: var(--c-bg2); color: var(--c-text2); border-radius: var(--r-md); margin-left: 6px; }
+  .machine-tab.active .badge { background: var(--c-info-bg); color: var(--c-info); }
+
+  .sync-bar { display: flex; align-items: center; gap: 10px; padding: 10px 14px; margin-bottom: 14px; background: var(--c-bg2); border-radius: var(--r-md); font-size: 13px; flex-wrap: wrap; }
+  .sync-status { display: inline-flex; align-items: center; gap: 6px; }
+  .sync-dot { width: 8px; height: 8px; border-radius: 50%; background: var(--c-text3); }
+  .sync-dot.online { background: var(--c-success); }
+  .sync-dot.editing { background: var(--c-warn); }
+  .sync-dot.syncing { background: var(--c-info); }
+  .sync-dot.error { background: var(--c-danger); }
+  .sheet-link { padding: 6px 12px; font-size: 13px; background: var(--c-success-bg); color: var(--c-success); border-radius: var(--r-md); text-decoration: none; }
+
+  .top-bar { display: flex; gap: 10px; flex-wrap: wrap; align-items: flex-end; padding: 14px; background: var(--c-bg2); border-radius: var(--r-lg); margin-bottom: 14px; }
+  .top-bar input { height: 44px; font-size: 15px; padding: 0 12px; border: 1px solid var(--c-bd2); border-radius: var(--r-md); background: var(--c-bg); color: var(--c-text); font-family: var(--font); box-sizing: border-box; width: 160px; }
+  .top-bar select { height: 44px; font-size: 15px; padding: 0 12px; border: 1px solid var(--c-bd2); border-radius: var(--r-md); background: var(--c-bg); color: var(--c-text); font-family: var(--font); box-sizing: border-box; width: 160px; cursor: pointer; }
+  .top-bar select:disabled { background: var(--c-bg2); cursor: default; }
+  .top-bar input:disabled { background: var(--c-bg2); }
+  .top-bar label { font-size: 13px; color: var(--c-text2); margin-bottom: 4px; display: block; }
+  .field { display: flex; flex-direction: column; }
+
+  .tabs { display: flex; gap: 6px; margin-bottom: 12px; flex-wrap: wrap; }
+  .tab { padding: 12px 22px; font-size: 15px; font-weight: 500; cursor: pointer; background: transparent; color: var(--c-text2); border: 1px solid var(--c-bd); border-radius: var(--r-md); min-height: 48px; font-family: var(--font); }
+  .tab.active { background: var(--c-info-bg); color: var(--c-info); border-color: var(--c-info-bd); }
+
+  .filter-group { display: inline-flex; gap: 4px; background: var(--c-bg3); padding: 4px; border-radius: var(--r-md); }
+  .filter-btn { padding: 8px 14px; font-size: 14px; border: none; background: transparent; color: var(--c-text2); border-radius: var(--r-md); cursor: pointer; font-family: var(--font); min-height: 40px; }
+  .filter-btn.on { background: var(--c-bg); color: var(--c-text); box-shadow: 0 1px 2px rgba(0,0,0,0.1); font-weight: 500; }
+
+  .analysis-card { background: var(--c-bg); border: 1px solid var(--c-bd); border-radius: var(--r-lg); padding: 16px; margin-bottom: 12px; }
+  .analysis-title { font-size: 15px; font-weight: 500; margin-bottom: 12px; }
+
+  .summary { display: grid; grid-template-columns: repeat(3, 1fr); gap: 10px; margin-bottom: 14px; }
+  .sc { background: var(--c-bg2); padding: 12px 14px; border-radius: var(--r-md); }
+  .sc-label { font-size: 12px; color: var(--c-text2); }
+  .sc-value { font-size: 26px; font-weight: 500; margin-top: 2px; line-height: 1.1; }
+
+  .group-header { background: var(--c-bg2); padding: 8px 14px; border-radius: var(--r-md); font-size: 14px; font-weight: 500; color: var(--c-text2); margin: 14px 0 8px; }
+  .check-row { display: grid; grid-template-columns: 44px 1fr auto; gap: 12px; align-items: center; padding: 14px; background: var(--c-bg); border: 1px solid var(--c-bd); border-radius: var(--r-lg); margin-bottom: 8px; }
+  .check-row.has-photo { grid-template-columns: 44px 52px 1fr auto; }
+  .check-row.is-ng { border-color: var(--c-danger-bd); background: var(--c-danger-bg); }
+  .check-row.is-ok { border-color: var(--c-success-bd); }
+  .check-row.is-tri { border-color: #FAC775; background: var(--c-warn-bg); }
+  .check-row.readonly { opacity: 0.85; }
+  .row-no { width: 44px; height: 44px; border-radius: 50%; background: var(--c-bg2); display: flex; align-items: center; justify-content: center; font-size: 16px; font-weight: 500; color: var(--c-text2); }
+  .row-photo { width: 52px; height: 52px; object-fit: cover; border-radius: var(--r-md); border: 1px solid var(--c-bd); cursor: pointer; background: var(--c-bg2); }
+  .row-body { min-width: 0; }
+  .row-place { font-size: 12px; color: var(--c-text2); background: var(--c-bg2); padding: 3px 10px; border-radius: var(--r-md); display: inline-block; margin-bottom: 6px; }
+  .row-side { font-size: 12px; color: var(--c-info); background: var(--c-info-bg); padding: 3px 10px; border-radius: var(--r-md); display: inline-block; margin-bottom: 6px; margin-left: 4px; }
+  .row-content { font-size: 15px; line-height: 1.5; color: var(--c-text); word-break: break-word; }
+
+  .judge-group { display: flex; gap: 8px; }
+  .judge-btn { width: 64px; height: 56px; border-radius: var(--r-md); font-size: 24px; font-weight: 500; cursor: pointer; border: 1px solid var(--c-bd2); background: var(--c-bg); color: var(--c-text2); display: flex; align-items: center; justify-content: center; font-family: var(--font); }
+  .judge-btn:disabled { cursor: not-allowed; opacity: 0.6; }
+  .judge-btn.ok-on { background: var(--c-success-bg); color: var(--c-success); border-color: var(--c-success-bd); border-width: 2px; }
+  .judge-btn.ng-on { background: var(--c-danger-bg); color: var(--c-danger); border-color: var(--c-danger-bd); border-width: 2px; }
+  .judge-btn.tri-on { background: var(--c-warn-bg); color: var(--c-warn); border-color: #FAC775; border-width: 2px; }
+
+  .ng-note { grid-column: 1 / -1; margin-top: 8px; padding: 10px; background: var(--c-bg); border: 1px solid var(--c-danger-bd); border-radius: var(--r-md); }
+  .ng-note textarea { width: 100%; min-height: 48px; padding: 8px 10px; border: 1px solid var(--c-bd); border-radius: var(--r-md); font-size: 14px; font-family: var(--font); background: var(--c-bg); color: var(--c-text); box-sizing: border-box; resize: vertical; }
+  .tri-note { grid-column: 1 / -1; margin-top: 8px; padding: 10px; background: var(--c-bg); border: 1px solid #FAC775; border-radius: var(--r-md); }
+  .tri-note textarea { width: 100%; min-height: 48px; padding: 8px 10px; border: 1px solid var(--c-bd); border-radius: var(--r-md); font-size: 14px; font-family: var(--font); background: var(--c-bg); color: var(--c-text); box-sizing: border-box; resize: vertical; }
+
+  .btn { height: 48px; padding: 0 18px; font-size: 15px; font-weight: 500; border: 1px solid var(--c-bd2); border-radius: var(--r-md); background: var(--c-bg); color: var(--c-text); cursor: pointer; font-family: var(--font); }
+  .btn:disabled { opacity: 0.5; cursor: not-allowed; }
+  .btn.primary { background: var(--c-info-bg); color: var(--c-info); border-color: var(--c-info-bd); }
+  .btn.danger { color: var(--c-danger); }
+  .btn.success { background: var(--c-success-bg); color: var(--c-success); border-color: var(--c-success-bd); }
+  .btn.warning { background: var(--c-warn-bg); color: var(--c-warn); border-color: #FAC775; }
+  .btn.sm { height: 36px; font-size: 13px; padding: 0 12px; }
+
+  .hist-row { display: grid; grid-template-columns: 1fr 1fr 1fr auto; gap: 10px; align-items: center; padding: 12px 14px; background: var(--c-bg); border: 1px solid var(--c-bd); border-radius: var(--r-md); margin-bottom: 8px; }
+  .pill { display: inline-block; padding: 2px 10px; border-radius: var(--r-md); font-size: 12px; font-weight: 500; }
+  .pill-ok { background: var(--c-success-bg); color: var(--c-success); }
+  .pill-ng { background: var(--c-danger-bg); color: var(--c-danger); }
+
+  .item-mgr { display: grid; grid-template-columns: 50px 130px 90px 1fr 80px; gap: 8px; align-items: center; padding: 10px 12px; background: var(--c-bg); border: 1px solid var(--c-bd); border-radius: var(--r-md); margin-bottom: 6px; }
+  .item-mgr.item-mgr-photo { grid-template-columns: 50px 56px 130px 90px 1fr 80px; }
+  .item-mgr input { width: 100%; height: 38px; padding: 0 10px; font-size: 14px; border: 1px solid var(--c-bd); border-radius: var(--r-md); background: var(--c-bg); color: var(--c-text); font-family: var(--font); box-sizing: border-box; }
+  .item-thumb { width: 48px; height: 48px; object-fit: cover; border-radius: var(--r-md); border: 1px solid var(--c-bd); cursor: pointer; background: var(--c-bg2); }
+  .item-thumb-empty { display: flex; align-items: center; justify-content: center; font-size: 10px; color: var(--c-text3); cursor: default; text-align: center; line-height: 1.2; }
+  .photo-edit { display: flex; gap: 12px; align-items: flex-start; margin-bottom: 4px; }
+  .photo-edit-thumb { width: 96px; height: 96px; object-fit: cover; border-radius: var(--r-md); border: 1px solid var(--c-bd); cursor: pointer; background: var(--c-bg2); flex-shrink: 0; }
+  .photo-edit-empty { display: flex; align-items: center; justify-content: center; font-size: 12px; color: var(--c-text3); cursor: default; }
+  .photo-edit-btns { display: flex; flex-direction: column; gap: 8px; }
+
+  .empty { text-align: center; padding: 40px 20px; color: var(--c-text2); font-size: 14px; background: var(--c-bg2); border-radius: var(--r-lg); }
+  .progress-bar { height: 8px; background: var(--c-bg2); border-radius: 4px; overflow: hidden; margin-bottom: 16px; }
+  .progress-fill { height: 100%; background: var(--c-success); transition: width 0.3s; }
+
+  .modal-bg { position: fixed; inset: 0; background: rgba(0,0,0,0.5); display: flex; align-items: center; justify-content: center; z-index: 1000; padding: 20px; }
+  .modal { background: var(--c-bg); border-radius: var(--r-lg); padding: 24px; max-width: 600px; width: 100%; max-height: 90vh; overflow-y: auto; }
+  .modal label { font-size: 13px; color: var(--c-text2); display: block; margin-bottom: 4px; }
+  .modal input, .modal textarea { width: 100%; padding: 8px 10px; border: 1px solid var(--c-bd); border-radius: var(--r-md); font-size: 14px; font-family: var(--font); box-sizing: border-box; margin-bottom: 12px; }
+
+  .print-config { padding: 18px; background: var(--c-info-bg); border: 1px solid var(--c-info-bd); border-radius: var(--r-lg); margin-bottom: 16px; }
+
+  .month-table { width: 100%; border-collapse: collapse; font-size: 7pt; font-family: sans-serif; color: #000; }
+  .month-table th, .month-table td { border: 1px solid #333; padding: 1px 2px; }
+  .month-table thead th { background: #d0d0d0; font-weight: bold; }
+  .month-table .ok-cell { color: #060; font-weight: bold; text-align: center; font-size: 10pt; }
+  .month-table .ng-cell { color: #c00; font-weight: bold; text-align: center; font-size: 10pt; background: #ffe8e8; }
+  .month-table .tri-cell { color: #946000; font-weight: bold; text-align: center; font-size: 10pt; background: #fff3df; }
+
+  .spinner { display: inline-block; width: 28px; height: 28px; border: 3px solid #e0e0e0; border-top-color: var(--c-info); border-radius: 50%; animation: spin 0.8s linear infinite; }
+  @keyframes spin { to { transform: rotate(360deg); } }
+
+  /* ============================================================
+     スマホ専用(画面幅600px以下のときだけ適用)
+     ※PC表示には一切影響しません
+     ============================================================ */
+  @media (max-width: 600px) {
+    body { padding: 8px; }
+    #wrap { padding: 12px; border-radius: var(--r-md); }
+
+    /* 設備切替: 文字を大きく、押しやすく */
+    .machine-selector { gap: 6px; padding: 5px; }
+    .machine-tab { padding: 14px 8px; font-size: 16px; line-height: 1.3; }
+    .machine-tab .badge { display: block; margin-left: 0; margin-top: 4px; font-size: 12px; }
+
+    /* タブ: 横スクロールではみ出しを防ぎ、文字を大きく */
+    .tabs { gap: 6px; }
+    .tab { padding: 12px 14px; font-size: 15px; min-height: 50px; flex: 1 1 auto; }
+
+    /* 同期バー */
+    .sync-bar { font-size: 14px; padding: 12px; }
+
+    /* 点検実施: 入力欄を縦積み・全幅に */
+    .top-bar { padding: 12px; gap: 12px; }
+    .top-bar .field { width: 100%; }
+    .top-bar input { width: 100%; height: 50px; font-size: 17px; }
+    .top-bar select { width: 100%; height: 50px; font-size: 17px; }
+    .top-bar label { font-size: 14px; }
+
+    /* サマリー: 4列→2列に */
+    .summary { grid-template-columns: repeat(3, 1fr); gap: 10px; }
+    .sc { padding: 14px; }
+    .sc-label { font-size: 14px; }
+    .sc-value { font-size: 30px; }
+
+    .group-header { font-size: 16px; padding: 10px 14px; }
+
+    /* 点検実施の行: 縦積みにして判定ボタンを大きく横いっぱいに */
+    .check-row,
+    .check-row.has-photo { grid-template-columns: 1fr; gap: 10px; padding: 16px; }
+    .row-no { width: 40px; height: 40px; font-size: 17px; }
+    .row-photo { width: 100%; height: 160px; }
+    .row-content { font-size: 17px; line-height: 1.6; }
+    .row-place, .row-side { font-size: 14px; padding: 4px 12px; }
+    .judge-group { width: 100%; gap: 12px; }
+    .judge-btn { flex: 1; width: auto; height: 64px; font-size: 30px; }
+    .ng-note textarea { font-size: 16px; min-height: 64px; }
+
+    /* ボタン: 全体的に大きく */
+    .btn { height: 52px; font-size: 16px; }
+    .btn.sm { height: 44px; font-size: 15px; }
+
+    /* 項目管理: 行を縦積みにして読みやすく */
+    .item-mgr,
+    .item-mgr.item-mgr-photo { grid-template-columns: 1fr; gap: 8px; padding: 14px; }
+    .item-mgr input { height: 50px; font-size: 17px; }
+    /* 追加フォームの「No.」「場所」「側」「内容」「+」を縦並びに */
+    .item-mgr-add-mobile { grid-template-columns: 1fr !important; }
+    /* 登録済みリストの各項目 */
+    .item-row-no { font-size: 18px !important; }
+    .item-row-place { font-size: 16px !important; }
+    .item-row-side { font-size: 14px !important; }
+    .item-row-content { font-size: 16px !important; line-height: 1.6; }
+    .item-thumb { width: 100%; height: 140px; }
+    .item-thumb-empty { height: 60px; font-size: 13px; }
+    .item-actions { display: flex; gap: 10px; }
+    .item-actions .btn { flex: 1; width: auto !important; height: 50px; }
+
+    /* 編集モーダル: ほぼ全画面に広げ、文字と入力欄を大きく */
+    .modal-bg { padding: 10px; }
+    .modal { padding: 18px; max-height: 94vh; }
+    .modal h3 { font-size: 20px; }
+    .modal label { font-size: 15px; }
+    .modal input, .modal textarea { font-size: 17px; padding: 12px; }
+    .photo-edit { flex-direction: column; }
+    .photo-edit-thumb, .photo-edit-empty { width: 100%; height: 180px; }
+    .photo-edit-btns { flex-direction: row; flex-wrap: wrap; width: 100%; }
+    .photo-edit-btns .btn { flex: 1; }
+  }
+</style>
+</head>
+<body>
+<div id="wrap">
+  <div id="root">
+    <div class="empty"><div class="spinner"></div><div style="margin-top:12px;">読み込み中...</div></div>
+  </div>
+  <div id="print-area"></div>
+</div>
+
+<script>
+// ============================================================
+// エラーハンドリング
+// ============================================================
+// JSONPの<script>読み込みやクロスオリジンに起因する「Script error.」は
+// 詳細が取れず実害がないことが多いため、画面全体は潰さずコンソールにのみ記録する。
+window.addEventListener('error', function(e) {
+  var msg = e.message || '';
+  // クロスオリジンの "Script error." は無視(JSONP由来のことが多い)
+  if (msg === 'Script error.' || msg === 'Script error' || !msg) {
+    console.warn('無視可能なスクリプトエラー(JSONP由来の可能性):', e);
+    return;
+  }
+  // アプリがまだ描画されていない(初期化前)の致命的エラーのみ全画面表示
+  if (!window.__appRendered) {
+    showFatalError('エラーが発生しました', msg + '\n行: ' + (e.lineno||'?'));
+  } else {
+    // 描画後のエラーはコンソールのみ。画面は維持
+    console.error('実行時エラー:', e);
+  }
+});
+function showFatalError(title, detail) {
+  var root = document.getElementById('root');
+  if (root) {
+    root.innerHTML = '<div class="err-box"><h3>⚠ ' + title + '</h3><pre>' + 
+      String(detail).replace(/</g,'&lt;') + '</pre><p style="font-size:13px;">この内容をスクリーンショットで撮って共有してください。</p></div>';
+  }
+}
+
+// ============================================================
+// 設定 - ここを書き換えてください
+// ============================================================
+// ★★★ Apps Script ウェブアプリ URL ★★★
+var GAS_URL = 'https://script.google.com/macros/s/AKfycby0ti7hP9-qWXR_z82zBZMbVBS5XINM_LtxUOGleFl_nBN9MdnSXou6_pWYXi7nCAg/exec';
+// ★★★ スプレッドシートURL(任意) ★★★
+var SHEET_URL = 'https://docs.google.com/spreadsheets/d/1g2CmDaL8mTyexC8NksR5r7b0R2Kv3QBIeSHWzyeEyDc/edit';
+
+var isGasConfigured = GAS_URL !== 'YOUR_GAS_URL_HERE';
+
+// ============================================================
+// 点検項目データ
+// ============================================================
+var G2_ITEMS = [
+  {no:1,place:'製袋部',side:'',content:'ボビンが一定の速さで回っているか（ボビンブレーキ・フィルム繰出し）'},
+  {no:2,place:'製袋部',side:'',content:'熱電対、ヒーターカートリッジの破れ等はないか'},
+  {no:3,place:'製袋部',side:'',content:'後サーボローラーのスプリング圧が効いているか'},
+  {no:4,place:'製袋部',side:'',content:'後サーボギアから異音がしないか'},
+  {no:5,place:'製袋部',side:'',content:'Rカットの動作不良、異音、汚れはないか'},
+  {no:6,place:'製袋部',side:'',content:'駆動チェーンはスムーズに動いているか'},
+  {no:7,place:'製袋部',side:'',content:'減速機チェーンはスムーズに動いているか'},
+  {no:8,place:'製袋部',side:'',content:'製袋部各シールの動作不良、異音等はないか'},
+  {no:9,place:'製袋部',side:'',content:'袋の高さは目盛り基準通りか'},
+  {no:10,place:'製袋部',side:'',content:'メクリ・受渡し吸引の真空圧が40ｋ㎩以上あるか'},
+  {no:11,place:'製袋部',side:'',content:'中間テンション、繰り出しテンションの圧力ゲージは正常であるか'},
+  {no:12,place:'製袋部',side:'',content:'チャック繰り出しテンションバーが2回に1回ストッパーに当たっているか'},
+  {no:13,place:'製袋部',side:'',content:'印字検査装置の保存容量が10%以上か'},
+  {no:14,place:'充填部',side:'',content:'チャック開口吸盤に破れが無いか'},
+  {no:15,place:'充填部',side:'',content:'チャック開口鉄爪動作レギュレーターの圧力は60ｋ㎩以上あるか'},
+  {no:16,place:'充填部',side:'',content:'第3開口吸盤に破れが無いか'},
+  {no:17,place:'充填部',side:'',content:'案内ベラで袋を潰していないか'},
+  {no:18,place:'充填部',side:'',content:'アーム爪が袋のサイドシール分掴んでいるか（第3開口部にて4本×9セット）'},
+  {no:19,place:'充填部',side:'',content:'6工程ユニット動作時にガタツキが無いか'},
+  {no:20,place:'充填部',side:'',content:'トップシール、冷却シール動作時に異音が無いか'},
+  {no:21,place:'充填部',side:'',content:'トップシール冷却のシール目が付いているか'},
+  {no:22,place:'充填部',side:'',content:'受渡し部カムのベアリングに浮きが無いか'},
+  {no:23,place:'充填部',side:'',content:'減速機チェーンはスムーズに動いているか'},
+  {no:24,place:'充填部',side:'',content:'受渡し部爪開き量15㎜以上あるか'},
+  {no:25,place:'充填部',side:'',content:'8工程爪開き量13㎜以上あるか'},
+  {no:26,place:'均しコンベア',side:'',content:'タイミングベルトはスムーズに回っているか'},
+  {no:27,place:'化粧箱機',side:'',content:'真空ポンプのゲージは40ｋ㎩以上あるか、レッドゲージでないか'},
+  {no:28,place:'化粧箱機',side:'',content:'テープユニットの高さは表示通りであるか'},
+  {no:29,place:'化粧箱機',side:'',content:'シート吸引、箱立て吸引、真空圧は40ｋ㎩以上あるか'},
+  {no:30,place:'化粧箱機',side:'',content:'移載チャックの取り残しは無いか'},
+  {no:31,place:'外箱機',side:'',content:'真空ポンプのゲージは40ｋ㎩以上あるか、レッドゲージでないか'},
+  {no:32,place:'外箱機',side:'',content:'ケースシーラーのテープの通し方は正常であるか'},
+  {no:33,place:'外箱機',side:'',content:'集積65ｋ㎩以上、シート吸引35ｋ㎩以上、積付30ｋ㎩以上の真空圧があるか'}
+];
+
+var G3_ITEMS = [
+  {no:1,place:'製袋部',side:'',content:'ボビンが一定の速さで回っているか（ボビンブレーキ・フィルム繰出し）'},
+  {no:2,place:'製袋部',side:'',content:'熱電対、ヒーターカートリッジの破れ等はないか'},
+  {no:3,place:'製袋部',side:'',content:'後サーボローラーのスプリング圧が効いているか'},
+  {no:4,place:'製袋部',side:'',content:'後サーボギアから異音がしないか'},
+  {no:5,place:'製袋部',side:'',content:'Rカットの動作不良、異音、汚れはないか'},
+  {no:6,place:'製袋部',side:'',content:'駆動チェーンはスムーズに動いているか'},
+  {no:7,place:'製袋部',side:'',content:'減速機チェーンはスムーズに動いているか'},
+  {no:8,place:'製袋部',side:'',content:'製袋部各シールの動作不良、異音等はないか'},
+  {no:9,place:'製袋部',side:'',content:'袋の高さは目盛り基準通りか'},
+  {no:10,place:'製袋部',side:'',content:'メクリ・受渡し吸引の真空圧が40ｋ㎩以上あるか'},
+  {no:11,place:'製袋部',side:'',content:'中間テンション、繰り出しテンションの圧力ゲージは正常であるか'},
+  {no:12,place:'製袋部',side:'',content:'チャック繰り出しテンションバーが2回に1回ストッパーに当たっているか'},
+  {no:13,place:'製袋部',side:'',content:'印字検査装置の保存容量が10%以上か'},
+  {no:14,place:'充填部',side:'',content:'チャック開口吸盤に破れが無いか'},
+  {no:15,place:'充填部',side:'',content:'第3開口吸盤に破れが無いか'},
+  {no:16,place:'充填部',side:'',content:'案内ベラで袋を潰していないか'},
+  {no:17,place:'充填部',side:'',content:'アーム爪が袋のサイドシール分掴んでいるか（第3開口部にて4本×9セット）'},
+  {no:18,place:'充填部',side:'',content:'6工程ユニット動作時にガタツキが無いか'},
+  {no:19,place:'充填部',side:'',content:'トップシール、冷却シール動作時に異音が無いか'},
+  {no:20,place:'充填部',side:'',content:'トップシール冷却のシール目が付いているか'},
+  {no:21,place:'充填部',side:'',content:'受渡し部カムのベアリングに浮きが無いか'},
+  {no:22,place:'充填部',side:'',content:'減速機チェーンはスムーズに動いているか'},
+  {no:23,place:'充填部',side:'',content:'受渡し部爪開き量15㎜以上あるか'},
+  {no:24,place:'充填部',side:'',content:'8工程爪開き量13㎜以上あるか'},
+  {no:25,place:'均しコンベア',side:'',content:'タイミングベルトはスムーズに回っているか'},
+  {no:26,place:'化粧箱機',side:'',content:'真空ポンプのゲージは40ｋ㎩以上あるか、レッドゲージでないか'},
+  {no:27,place:'化粧箱機',side:'',content:'テープユニットの高さは表示通りであるか'},
+  {no:28,place:'化粧箱機',side:'',content:'シート吸引、箱立て吸引、真空圧は40ｋ㎩以上あるか'},
+  {no:29,place:'化粧箱機',side:'',content:'移載チャックの取り残しは無いか'},
+  {no:30,place:'外箱機',side:'',content:'真空ポンプのゲージは40ｋ㎩以上あるか、レッドゲージでないか'},
+  {no:31,place:'外箱機',side:'',content:'ケースシーラーのテープの通し方は正常であるか'},
+  {no:32,place:'外箱機',side:'',content:'集積65ｋ㎩以上、シート吸引35ｋ㎩以上、積付30ｋ㎩以上の真空圧があるか'}
+];
+
+var G4_ITEMS = [
+  {no:1,place:'製袋部',side:'',content:'ボビンが一定の速さで回っているか（ボビンブレーキ・フィルム繰出し）'},
+  {no:2,place:'製袋部',side:'',content:'熱電対、ヒーターカートリッジの破れ等はないか'},
+  {no:3,place:'製袋部',side:'',content:'後サーボローラーのスプリング圧が効いているか'},
+  {no:4,place:'製袋部',side:'',content:'後サーボギアから異音がしないか'},
+  {no:5,place:'製袋部',side:'',content:'Rカットの動作不良、異音、汚れはないか'},
+  {no:6,place:'製袋部',side:'',content:'駆動チェーンはスムーズに動いているか'},
+  {no:7,place:'製袋部',side:'',content:'減速機チェーンはスムーズに動いているか'},
+  {no:8,place:'製袋部',side:'',content:'製袋部各シールの動作不良、異音等はないか'},
+  {no:9,place:'製袋部',side:'',content:'袋の高さは目盛り基準通りか'},
+  {no:10,place:'製袋部',side:'',content:'メクリ・受渡し吸引の真空圧が40ｋ㎩以上あるか'},
+  {no:11,place:'製袋部',side:'',content:'中間テンション、繰り出しテンションの圧力ゲージは正常であるか'},
+  {no:12,place:'製袋部',side:'',content:'チャック繰り出しテンションバーが2回に1回ストッパーに当たっているか'},
+  {no:13,place:'製袋部',side:'',content:'印字検査装置の保存容量が10%以上か'},
+  {no:14,place:'充填部',side:'',content:'チャック開口吸盤に破れが無いか'},
+  {no:15,place:'充填部',side:'',content:'第3開口吸盤に破れが無いか'},
+  {no:16,place:'充填部',side:'',content:'案内ベラで袋を潰していないか'},
+  {no:17,place:'充填部',side:'',content:'アーム爪が袋のサイドシール分掴んでいるか（第3開口部にて4本×9セット）'},
+  {no:18,place:'充填部',side:'',content:'6工程ユニット動作時にガタツキが無いか'},
+  {no:19,place:'充填部',side:'',content:'トップシール、冷却シール動作時に異音が無いか'},
+  {no:20,place:'充填部',side:'',content:'トップシール冷却のシール目が付いているか'},
+  {no:21,place:'充填部',side:'',content:'受渡し部カムのベアリングに浮きが無いか'},
+  {no:22,place:'充填部',side:'',content:'減速機チェーンはスムーズに動いているか'},
+  {no:23,place:'充填部',side:'',content:'受渡し部爪開き量15㎜以上あるか'},
+  {no:24,place:'充填部',side:'',content:'8工程爪開き量13㎜以上あるか'},
+  {no:25,place:'均しコンベア',side:'',content:'タイミングベルトはスムーズに回っているか'},
+  {no:26,place:'化粧箱機',side:'',content:'真空ポンプのゲージは40ｋ㎩以上あるか、レッドゲージでないか'},
+  {no:27,place:'化粧箱機',side:'',content:'テープユニットの高さは表示通りであるか'},
+  {no:28,place:'化粧箱機',side:'',content:'シート吸引、箱立て吸引、真空圧は40ｋ㎩以上あるか'},
+  {no:29,place:'化粧箱機',side:'',content:'移載チャックの取り残しは無いか'},
+  {no:30,place:'外箱機',side:'',content:'真空ポンプのゲージは40ｋ㎩以上あるか、レッドゲージでないか'},
+  {no:31,place:'外箱機',side:'',content:'ケースシーラーのテープの通し方は正常であるか'},
+  {no:32,place:'外箱機',side:'',content:'集積65ｋ㎩以上、シート吸引35ｋ㎩以上、積付30ｋ㎩以上の真空圧があるか'}
+];
+
+var G5_ITEMS = [
+  {no:1,place:'製袋部',side:'',content:'ボビンが一定の速さで回っているか（ボビンブレーキ・フィルム繰出し）'},
+  {no:2,place:'製袋部',side:'',content:'熱電対、ヒーターカートリッジの破れ等はないか'},
+  {no:3,place:'製袋部',side:'',content:'後サーボローラーのスプリング圧が効いているか'},
+  {no:4,place:'製袋部',side:'',content:'後サーボギアから異音がしないか'},
+  {no:5,place:'製袋部',side:'',content:'Rカットの動作不良、異音、汚れはないか'},
+  {no:6,place:'製袋部',side:'',content:'駆動チェーンはスムーズに動いているか'},
+  {no:7,place:'製袋部',side:'',content:'減速機チェーンはスムーズに動いているか'},
+  {no:8,place:'製袋部',side:'',content:'製袋部各シールの動作不良、異音等はないか'},
+  {no:9,place:'製袋部',side:'',content:'袋の高さは目盛り基準通りか'},
+  {no:10,place:'製袋部',side:'',content:'メクリ・受渡し吸引の真空圧が40ｋ㎩以上あるか'},
+  {no:11,place:'製袋部',side:'',content:'中間テンション、繰り出しテンションの圧力ゲージは正常であるか'},
+  {no:12,place:'製袋部',side:'',content:'チャック繰り出しテンションバーが2回に1回ストッパーに当たっているか'},
+  {no:13,place:'製袋部',side:'',content:'印字検査装置の保存容量が10%以上か'},
+  {no:14,place:'充填部',side:'',content:'チャック開口吸盤に破れが無いか'},
+  {no:15,place:'充填部',side:'',content:'チャック開口鉄爪動作レギュレーターの圧力は60ｋ㎩以上あるか'},
+  {no:16,place:'充填部',side:'',content:'第3開口吸盤に破れが無いか'},
+  {no:17,place:'充填部',side:'',content:'案内ベラで袋を潰していないか'},
+  {no:18,place:'充填部',side:'',content:'アーム爪が袋のサイドシール分掴んでいるか（第3開口部にて4本×9セット）'},
+  {no:19,place:'充填部',side:'',content:'6工程ユニット動作時にガタツキが無いか'},
+  {no:20,place:'充填部',side:'',content:'トップシール、冷却シール動作時に異音が無いか'},
+  {no:21,place:'充填部',side:'',content:'トップシール冷却のシール目が付いているか'},
+  {no:22,place:'充填部',side:'',content:'受渡し部カムのベアリングに浮きが無いか'},
+  {no:23,place:'充填部',side:'',content:'減速機チェーンはスムーズに動いているか'},
+  {no:24,place:'充填部',side:'',content:'受渡し部爪開き量15㎜以上あるか'},
+  {no:25,place:'充填部',side:'',content:'8工程爪開き量13㎜以上あるか'},
+  {no:26,place:'均しコンベア',side:'',content:'タイミングベルトはスムーズに回っているか'},
+  {no:27,place:'化粧箱機',side:'',content:'真空ポンプのゲージは40ｋ㎩以上あるか、レッドゲージでないか'},
+  {no:28,place:'化粧箱機',side:'',content:'テープユニットの高さは表示通りであるか'},
+  {no:29,place:'化粧箱機',side:'',content:'シート吸引、箱立て吸引、真空圧は40ｋ㎩以上あるか'},
+  {no:30,place:'化粧箱機',side:'',content:'移載チャックの取り残しは無いか'},
+  {no:31,place:'外箱機',side:'',content:'真空ポンプのゲージは40ｋ㎩以上あるか、レッドゲージでないか'},
+  {no:32,place:'外箱機',side:'',content:'ケースシーラーのテープの通し方は正常であるか'},
+  {no:33,place:'外箱機',side:'',content:'集積65ｋ㎩以上、シート吸引35ｋ㎩以上、積付30ｋ㎩以上の真空圧があるか'}
+];
+
+for (var _i2=0;_i2<G2_ITEMS.length;_i2++){ G2_ITEMS[_i2].id='item_'+G2_ITEMS[_i2].no; }
+for (var _i3=0;_i3<G3_ITEMS.length;_i3++){ G3_ITEMS[_i3].id='item_'+G3_ITEMS[_i3].no; }
+for (var _i4=0;_i4<G4_ITEMS.length;_i4++){ G4_ITEMS[_i4].id='item_'+G4_ITEMS[_i4].no; }
+for (var _i5=0;_i5<G5_ITEMS.length;_i5++){ G5_ITEMS[_i5].id='item_'+G5_ITEMS[_i5].no; }
+
+var MACHINES = {
+  g2: { id:'g2', name:'2号ライン', subtitle:'外装工程日常点検チェックリスト', paperSize:'A4', defaultItems: G2_ITEMS },
+  g3: { id:'g3', name:'3号ライン', subtitle:'外装工程日常点検チェックリスト', paperSize:'A4', defaultItems: G3_ITEMS },
+  g4: { id:'g4', name:'4号ライン', subtitle:'外装工程日常点検チェックリスト', paperSize:'A4', defaultItems: G4_ITEMS },
+  g5: { id:'g5', name:'5号ライン', subtitle:'外装工程日常点検チェックリスト', paperSize:'A4', defaultItems: G5_ITEMS }
+};
+// ============================================================
+// ユーティリティ
+// ============================================================
+function todayStr(){ var d=new Date(); return d.getFullYear()+'-'+pad(d.getMonth()+1)+'-'+pad(d.getDate()); }
+function currentMonthStr(){ var d=new Date(); return d.getFullYear()+'-'+pad(d.getMonth()+1); }
+function timeStr(){ var d=new Date(); return pad(d.getHours())+':'+pad(d.getMinutes()); }
+function pad(n){ return String(n).padStart(2,'0'); }
+function daysInMonth(ym){ var p=ym.split('-'); return new Date(Number(p[0]),Number(p[1]),0).getDate(); }
+function esc(s){ return String(s==null?'':s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;').replace(/'/g,'&#39;'); }
+function el(id){ return document.getElementById(id); }
+
+// ============================================================
+// Apps Script 通信 (fetch GET → 失敗時 JSONP フォールバック)
+// ============================================================
+function callGAS(action, body, cb, errcb){
+  if(!isGasConfigured){ errcb&&errcb(new Error('GAS未設定')); return; }
+  body = body || {};
+  body.action = action;
+  // まず fetch GET を試し、ダメなら JSONP にフォールバック
+  fetchGAS(action, body, cb, function(e1){
+    console.warn('fetch失敗、JSONPにフォールバック:', e1.message);
+    jsonpGAS(action, body, cb, function(e2){
+      errcb && errcb(new Error('通信失敗 (fetch: '+e1.message+' / jsonp: '+e2.message+')'));
+    });
+  });
+}
+
+// 方式1: fetch GET
+function fetchGAS(action, body, cb, errcb){
+  var payload = encodeURIComponent(JSON.stringify(body));
+  var url = GAS_URL + '?action=' + encodeURIComponent(action) + '&payload=' + payload;
+  var controller = null, timer = null;
+  try { controller = new AbortController(); } catch(e){}
+  var opts = { method:'GET', redirect:'follow' };
+  if(controller){ opts.signal = controller.signal; timer = setTimeout(function(){ controller.abort(); }, 12000); }
+  fetch(url, opts).then(function(res){
+    if(timer) clearTimeout(timer);
+    if(!res.ok) throw new Error('HTTP '+res.status);
+    return res.text();
+  }).then(function(text){
+    var data;
+    try { data = JSON.parse(text); } catch(e){ throw new Error('解析失敗'); }
+    if(data.error) throw new Error(data.error);
+    cb && cb(data);
+  }).catch(function(e){
+    if(timer) clearTimeout(timer);
+    errcb && errcb(new Error(e.name==='AbortError'?'タイムアウト':e.message));
+  });
+}
+
+// 方式2: JSONP (<script>タグ)
+var jsonpCounter = 0;
+function jsonpGAS(action, body, cb, errcb){
+  var cbName = 'gasCb_' + (jsonpCounter++) + '_' + Date.now();
+  var script = document.createElement('script');
+  var timer = null, done = false;
+  function cleanup(){
+    if(timer) clearTimeout(timer);
+    try { delete window[cbName]; } catch(e){ window[cbName] = undefined; }
+    if(script && script.parentNode) script.parentNode.removeChild(script);
+  }
+  window[cbName] = function(data){
+    if(done) return; done = true; cleanup();
+    if(data && data.error){ errcb && errcb(new Error(data.error)); }
+    else { cb && cb(data); }
+  };
+  timer = setTimeout(function(){
+    if(done) return; done = true; cleanup();
+    errcb && errcb(new Error('タイムアウト'));
+  }, 12000);
+  var payload = encodeURIComponent(JSON.stringify(body));
+  var url = GAS_URL + '?callback=' + cbName + '&action=' + encodeURIComponent(action) + '&payload=' + payload;
+  script.onerror = function(){
+    if(done) return; done = true; cleanup();
+    errcb && errcb(new Error('script読込失敗'));
+  };
+  script.src = url;
+  document.body.appendChild(script);
+}
+
+// ============================================================
+// アプリ状態
+// ============================================================
+var STATE = {
+  machineId: 'g2',
+  tab: 'check',
+  allItems: { g2: G2_ITEMS, g3: G3_ITEMS, g4: G4_ITEMS, g5: G5_ITEMS },
+  allRecords: { g2: {}, g3: {}, g4: {}, g5: {} },
+  allIssues: { g2: [], g3: [], g4: [], g5: [] },
+  allDoneIssues: { g2: [], g3: [], g4: [], g5: [] },
+  allIgnoredKeys: { g2: [], g3: [], g4: [], g5: [] },
+  allWatches: { g2: [], g3: [], g4: [], g5: [] },
+  allWatchDone: { g2: [], g3: [], g4: [], g5: [] },
+  allWatchIgnored: { g2: [], g3: [], g4: [], g5: [] },
+  date: todayStr(),
+  editMode: false,
+  sync: { state:'idle', message:'', at:null },
+  printMonth: currentMonthStr(),
+  editingItem: null,
+  staffNames: [],
+  checkFilter: 'all',
+  loading: true
+};
+var saveTimer = null;
+var pendingData = null;
+
+function getItems(){ return STATE.allItems[STATE.machineId] || []; }
+function getRecords(){ return STATE.allRecords[STATE.machineId] || {}; }
+function getIssues(){ return STATE.allIssues[STATE.machineId] || []; }
+function getDoneIssues(){ return STATE.allDoneIssues[STATE.machineId] || []; }
+function getWatches(){ return STATE.allWatches[STATE.machineId] || []; }
+function getWatchDone(){ return STATE.allWatchDone[STATE.machineId] || []; }
+function getCurrent(){ 
+  var r = getRecords()[STATE.date];
+  return r || { results:{}, notes:{}, inspector:'', checker:'' };
+}
+function getMachine(){ return MACHINES[STATE.machineId]; }
+
+// ============================================================
+// データ取得・保存
+// ============================================================
+function refresh(){
+  if(!isGasConfigured){ STATE.loading=false; render(); return; }
+  STATE.sync = { state:'syncing', message:'同期中...', at:null };
+  render();
+  callGAS('loadAll', {}, function(data){
+    var mids = ['g2','g3','g4','g5'];
+    for(var i=0;i<mids.length;i++){
+      var mid = mids[i];
+      if(data.items && data.items[mid] && data.items[mid].length>0){
+        STATE.allItems[mid] = data.items[mid];
+      }
+      STATE.allRecords[mid] = (data.records && data.records[mid]) || {};
+      STATE.allIssues[mid] = (data.issues && data.issues[mid]) || [];
+      STATE.allDoneIssues[mid] = (data.doneIssues && data.doneIssues[mid]) || [];
+      STATE.allIgnoredKeys[mid] = (data.ignoredKeys && data.ignoredKeys[mid]) || [];
+      STATE.allWatches[mid] = (data.watches && data.watches[mid]) || [];
+      STATE.allWatchDone[mid] = (data.watchDone && data.watchDone[mid]) || [];
+      STATE.allWatchIgnored[mid] = (data.watchIgnored && data.watchIgnored[mid]) || [];
+    }
+    // 同じ項目の未解決重複を1件に統合(過去の重複登録の後始末)
+    mergeOpenIssues();
+    mergeOpenWatches();
+    // NG項目から不具合を、△項目から経過観察を自動生成
+    syncIssuesFromRecords();
+    syncWatchesFromRecords();
+    // △の項目に後日×が出ていたら、その経過観察を自動完了
+    escalateWatchToNG();
+    STATE.staffNames = (data.staffNames && data.staffNames.length) ? data.staffNames : STATE.staffNames;
+    STATE.sync = { state:'online', message:'最新です', at:timeStr() };
+    STATE.loading = false;
+    render();
+  }, function(e){
+    STATE.sync = { state:'error', message:'同期エラー: '+e.message, at:null };
+    STATE.loading = false;
+    render();
+  });
+}
+
+// NG記録から不具合リストを自動生成
+// 各機械・各項目について、最新のNG発生を拾い、まだ不具合リストに無ければ追加候補にする。
+// 「完了」になっていない限り繰り越される(リストに残り続ける)。
+// 同じ項目(itemId)の「未解決」不具合が複数ある場合、1件に統合する。
+// 情報量が多い(対応コメント・担当・不具合内容が入っている)ものを優先して残し、
+// 残りはサーバの不具合シートからも削除する。重複の後始末用。
+function mergeOpenIssues(){
+  var mids = ['g2','g3','g4','g5'];
+  for(var mi=0; mi<mids.length; mi++){
+    var mid = mids[mi];
+    var issues = STATE.allIssues[mid] || [];
+    var open = [], closed = [];
+    issues.forEach(function(is){ if(is.status==='完了') closed.push(is); else open.push(is); });
+    // itemId ごとにグループ化
+    var groups = {};
+    open.forEach(function(is){
+      var k = is.itemId || ('__'+is.id);
+      (groups[k] = groups[k] || []).push(is);
+    });
+    var kept = [];
+    var toDelete = [];
+    Object.keys(groups).forEach(function(k){
+      var list = groups[k];
+      if(list.length<=1){ kept.push(list[0]); return; }
+      // スコア: 情報が入っているものを優先、同点なら発生日が新しいもの
+      list.sort(function(a,b){
+        var sa = issueInfoScore(a), sb = issueInfoScore(b);
+        if(sa !== sb) return sb - sa;
+        return (b.date||'').localeCompare(a.date||'');
+      });
+      kept.push(list[0]);
+      for(var i=1;i<list.length;i++){ toDelete.push(list[i]); }
+    });
+    if(toDelete.length>0){
+      STATE.allIssues[mid] = kept.concat(closed);
+      if(isGasConfigured){
+        toDelete.forEach(function(is){
+          enqueueSave({ machineId: mid, issueId: is.id, itemId: is.itemId, date: is.date }, 'deleteIssue');
+        });
+      }
+    }
+  }
+}
+// 不具合レコードの情報量スコア(高いほど残す価値が高い)
+function issueInfoScore(is){
+  var s = 0;
+  if(is.detail && String(is.detail).trim()) s += 2;
+  if(is.comment && String(is.comment).trim()) s += 2;
+  if(is.assignee && String(is.assignee).trim()) s += 1;
+  if(is.status && is.status!=='未着手') s += 1;
+  return s;
+}
+
+function syncIssuesFromRecords(){
+  var mids = ['g2','g3','g4','g5'];
+  for(var mi=0; mi<mids.length; mi++){
+    var mid = mids[mi];
+    var records = STATE.allRecords[mid] || {};
+    var issues = STATE.allIssues[mid] || [];
+    var doneIssues = STATE.allDoneIssues[mid] || [];
+    var ignoredKeys = STATE.allIgnoredKeys[mid] || [];
+    var items = STATE.allItems[mid] || [];
+    // 既存不具合を itemId+発生日 で索引(重複登録を防ぐ)
+    // ★未完了だけでなく「完了済み」も照合対象に含める。
+    //   これをしないと、完了にして消した不具合が、元のNG記録から再び自動生成されてしまう。
+    var existKey = {};
+    issues.forEach(function(is){ existKey[is.itemId + '|' + is.date] = true; });
+    doneIssues.forEach(function(is){ existKey[is.itemId + '|' + is.date] = true; });
+    // ★削除済み台帳に載っている itemId|発生日 も「登録済み」とみなし、再生成しない。
+    //   (同じ項目でも別の日に再発したNGは、台帳に無いので新しい不具合として生成される)
+    ignoredKeys.forEach(function(k){ existKey[k] = true; });
+    // 「この項目は未完了の不具合が既にある」かどうかの索引(繰り越し中の判定用)。
+    //   ループ内で新規追加したぶんもここに足し、同一項目の多重生成を防ぐ。
+    var openByItem = {};
+    issues.forEach(function(is){ if(is.status!=='完了') openByItem[is.itemId] = true; });
+    // 各日付の記録を走査し、NGを見つける
+    var newIssues = [];
+    for(var date in records){
+      var rec = records[date];
+      if(!rec || !rec.results) continue;
+      for(var itemId in rec.results){
+        if(rec.results[itemId] !== 'ng') continue;
+        var key = itemId + '|' + date;
+        if(existKey[key]) continue; // 既に登録済み(未完了・完了済みのどちらも)
+        // 同じ項目で「未完了」の不具合が既にあれば、新規追加しない(繰り越し中とみなす)
+        if(openByItem[itemId]) continue;
+        var it = null;
+        for(var k=0;k<items.length;k++){ if(items[k].id===itemId){ it=items[k]; break; } }
+        var note = (rec.notes && rec.notes[itemId]) || '';
+        newIssues.push({
+          id: 'iss_' + mid + '_' + itemId + '_' + date.replace(/-/g,''),
+          date: date,
+          itemId: itemId,
+          no: it ? it.no : '',
+          place: it ? it.place : '',
+          side: it ? it.side : '',
+          content: it ? it.content : '',
+          detail: note,
+          assignee: '',
+          status: '未着手',
+          doneDate: '',
+          _unsaved: true  // まだサーバ未保存
+        });
+        existKey[key] = true;
+        openByItem[itemId] = true; // 同一項目の他日NGがこの後に新規生成されるのを防ぐ
+      }
+    }
+    if(newIssues.length>0){
+      STATE.allIssues[mid] = issues.concat(newIssues);
+      // 新規不具合をサーバに逐次保存(一気に送ると失敗しやすいため)
+      if(isGasConfigured){
+        newIssues.forEach(function(is){
+          var toSave = {}; for(var p in is){ if(p!=='_unsaved') toSave[p]=is[p]; }
+          enqueueSave({ machineId: mid, issue: toSave }, 'saveIssue');
+        });
+      }
+    }
+  }
+}
+
+// ============================================================
+// 経過観察(△)の自動生成・統合 ── 不具合(×)と同じ仕組みの並列版
+// ============================================================
+// 同一項目の未完了の経過観察が複数あれば1件に統合(重複の後始末)
+function mergeOpenWatches(){
+  var mids = ['g2','g3','g4','g5'];
+  for(var mi=0; mi<mids.length; mi++){
+    var mid = mids[mi];
+    var watches = STATE.allWatches[mid] || [];
+    var open = [], closed = [];
+    watches.forEach(function(w){ if(w.status==='完了') closed.push(w); else open.push(w); });
+    var groups = {};
+    open.forEach(function(w){
+      var k = w.itemId || ('__'+w.id);
+      (groups[k] = groups[k] || []).push(w);
+    });
+    var kept = [];
+    var toDelete = [];
+    Object.keys(groups).forEach(function(k){
+      var list = groups[k];
+      if(list.length<=1){ kept.push(list[0]); return; }
+      list.sort(function(a,b){
+        var sa = issueInfoScore(a), sb = issueInfoScore(b);
+        if(sa !== sb) return sb - sa;
+        return (b.date||'').localeCompare(a.date||'');
+      });
+      kept.push(list[0]);
+      for(var i=1;i<list.length;i++){ toDelete.push(list[i]); }
+    });
+    if(toDelete.length>0){
+      STATE.allWatches[mid] = kept.concat(closed);
+      if(isGasConfigured){
+        toDelete.forEach(function(w){
+          enqueueSave({ machineId: mid, watchId: w.id, itemId: w.itemId, date: w.date }, 'deleteWatch');
+        });
+      }
+    }
+  }
+}
+
+// △記録から経過観察リストを自動生成(完了済み・台帳も照合して再生成を防ぐ)
+function syncWatchesFromRecords(){
+  var mids = ['g2','g3','g4','g5'];
+  for(var mi=0; mi<mids.length; mi++){
+    var mid = mids[mi];
+    var records = STATE.allRecords[mid] || {};
+    var watches = STATE.allWatches[mid] || [];
+    var doneW = STATE.allWatchDone[mid] || [];
+    var ignoredKeys = STATE.allWatchIgnored[mid] || [];
+    var items = STATE.allItems[mid] || [];
+    var existKey = {};
+    watches.forEach(function(w){ existKey[w.itemId + '|' + w.date] = true; });
+    doneW.forEach(function(w){ existKey[w.itemId + '|' + w.date] = true; });
+    ignoredKeys.forEach(function(k){ existKey[k] = true; });
+    var openByItem = {};
+    watches.forEach(function(w){ if(w.status!=='完了') openByItem[w.itemId] = true; });
+    var newWatches = [];
+    for(var date in records){
+      var rec = records[date];
+      if(!rec || !rec.results) continue;
+      for(var itemId in rec.results){
+        if(rec.results[itemId] !== 'tri') continue; // △のみ対象
+        var key = itemId + '|' + date;
+        if(existKey[key]) continue;
+        if(openByItem[itemId]) continue;
+        var it = null;
+        for(var k=0;k<items.length;k++){ if(items[k].id===itemId){ it=items[k]; break; } }
+        var note = (rec.notes && rec.notes[itemId]) || '';
+        newWatches.push({
+          id: 'wat_' + mid + '_' + itemId + '_' + date.replace(/-/g,''),
+          date: date,
+          itemId: itemId,
+          no: it ? it.no : '',
+          place: it ? it.place : '',
+          side: it ? it.side : '',
+          content: it ? it.content : '',
+          detail: note,
+          assignee: '',
+          status: '未着手',
+          doneDate: '',
+          _unsaved: true
+        });
+        existKey[key] = true;
+        openByItem[itemId] = true;
+      }
+    }
+    if(newWatches.length>0){
+      STATE.allWatches[mid] = watches.concat(newWatches);
+      if(isGasConfigured){
+        newWatches.forEach(function(w){
+          var toSave = {}; for(var p in w){ if(p!=='_unsaved') toSave[p]=w[p]; }
+          enqueueSave({ machineId: mid, watch: toSave }, 'saveWatch');
+        });
+      }
+    }
+  }
+}
+
+// 経過観察(△)の項目に後日×が出たら、その経過観察を自動完了する。
+// (製造版から移植。△の項目が×に至ったら観察リストから外し、不具合リスト側に一本化する)
+// 経過観察タブを開くたび(switchTab)に実行される。
+function escalateWatchToNG(){
+  var mids = ['g2','g3','g4','g5'];
+  for(var mi=0; mi<mids.length; mi++){
+    var mid = mids[mi];
+    var records = STATE.allRecords[mid] || {};
+    var watches = STATE.allWatches[mid] || [];
+    if(watches.length===0) continue;
+    // 各項目の×発生日を集める
+    var ngDates = {};
+    for(var d in records){
+      var r = records[d]; if(!r || !r.results) continue;
+      for(var id in r.results){ if(r.results[id]==='ng'){ (ngDates[id] = ngDates[id] || []).push(d); } }
+    }
+    var toComplete = [];
+    watches.forEach(function(w){
+      if(w.status==='完了') return;
+      var nd = ngDates[w.itemId]; if(!nd) return;
+      // 観察開始日(w.date)以降に×が出ているか。最も早い該当×日を完了日にする。
+      var hit = null;
+      for(var i=0;i<nd.length;i++){ if(nd[i] >= w.date){ if(!hit || nd[i] < hit) hit = nd[i]; } }
+      if(hit){ toComplete.push({ w:w, ngDate:hit }); }
+    });
+    if(toComplete.length>0){
+      var done = STATE.allWatchDone[mid] || [];
+      toComplete.forEach(function(o){
+        o.w.status = '完了';
+        if(!o.w.doneDate) o.w.doneDate = o.ngDate;
+        if(!o.w.comment) o.w.comment = '×が発生したため完了(不具合リストへ移行)';
+        if(!done.some(function(x){ return x.id===o.w.id; })){
+          var cp = {}; for(var q in o.w){ if(q!=='_unsaved') cp[q] = o.w[q]; }
+          done.push(cp);
+        }
+      });
+      STATE.allWatches[mid] = watches.filter(function(w){ return w.status!=='完了'; });
+      STATE.allWatchDone[mid] = done;
+      if(isGasConfigured){
+        toComplete.forEach(function(o){
+          var toSave = {}; for(var p in o.w){ if(p!=='_unsaved') toSave[p] = o.w[p]; }
+          enqueueSave({ machineId: mid, watch: toSave }, 'completeWatch');
+        });
+      }
+    }
+  }
+}
+
+// ============================================================
+// 逐次保存キュー(同時リクエストを避けて失敗を減らす)
+// ============================================================
+var saveQueue = [];
+var saveQueueRunning = false;
+function enqueueSave(payload, action){
+  saveQueue.push({ payload: payload, action: action });
+  runSaveQueue();
+}
+function runSaveQueue(){
+  if(saveQueueRunning) return;
+  if(saveQueue.length===0) return;
+  saveQueueRunning = true;
+  var job = saveQueue.shift();
+  STATE.sync = { state:'syncing', message:'保存中... (残'+ (saveQueue.length+1) +')', at:null }; updateSyncBar();
+  callGAS(job.action, job.payload, function(){
+    saveQueueRunning = false;
+    if(saveQueue.length===0){ STATE.sync = { state:'editing', message:'保存しました', at:timeStr() }; updateSyncBar(); }
+    runSaveQueue();
+  }, function(e){
+    saveQueueRunning = false;
+    STATE.sync = { state:'error', message:'保存失敗: '+e.message, at:null }; updateSyncBar();
+    // 失敗しても次のジョブは試す
+    runSaveQueue();
+  });
+}
+
+// ============================================================
+// 不具合リスト操作
+// ============================================================
+function updateIssue(issueId, field, value, noRender){
+  var issues = getIssues();
+  var target = null;
+  for(var i=0;i<issues.length;i++){ if(issues[i].id===issueId){ target=issues[i]; break; } }
+  if(!target) return;
+
+  // 「完了」にした場合: 完了済みシートへ移動し、画面リストからも除去
+  if(field==='status' && value==='完了'){
+    target.status = '完了';
+    if(!target.doneDate) target.doneDate = todayStr();
+    // ローカルリストから除去(画面から消える)
+    STATE.allIssues[STATE.machineId] = issues.filter(function(x){ return x.id !== issueId; });
+    // 完了済みリストへ追加(印刷・出力に即時反映。重複は避ける)
+    var dlist = STATE.allDoneIssues[STATE.machineId] || [];
+    if(!dlist.some(function(x){ return x.id===issueId; })){
+      var doneCopy = {}; for(var q in target){ if(q!=='_unsaved') doneCopy[q]=target[q]; }
+      dlist = dlist.concat([doneCopy]);
+    }
+    STATE.allDoneIssues[STATE.machineId] = dlist;
+    // サーバ側で完了済みシートへ移動(不具合シートから削除)
+    if(isGasConfigured){
+      var toSave = {}; for(var p in target){ if(p!=='_unsaved') toSave[p]=target[p]; }
+      enqueueSave({ machineId: STATE.machineId, issue: toSave }, 'completeIssue');
+    }
+    render();
+    return;
+  }
+
+  target[field] = value;
+  // サーバ保存(debounceで連続編集をまとめる)
+  scheduleIssueSave(target);
+  // 状況変更など、見た目が大きく変わるものだけ再描画。テキスト入力は再描画しない。
+  if(!noRender) render();
+}
+
+// 不具合をリストから削除(完了済みには移さない)。
+// 削除した「項目+発生日」は台帳に記録され、その日のNGからは二度と自動生成されない。
+// 別の日に同じ項目が再発した場合は、新しい不具合として通常どおり表示される。
+function deleteIssueFromList(issueId){
+  var issues = getIssues();
+  var target = null;
+  for(var i=0;i<issues.length;i++){ if(issues[i].id===issueId){ target=issues[i]; break; } }
+  if(!target) return;
+  if(!confirm('この不具合をリストから削除しますか?\n(完了済みには残りません。削除したこの発生日のぶんは今後復活しません。\n別の日に同じ箇所が再びNGになれば、新しい不具合として表示されます)')) return;
+  // ローカルから除去
+  STATE.allIssues[STATE.machineId] = issues.filter(function(x){ return x.id !== issueId; });
+  // 台帳キーをローカルにも即時反映(この場で再生成されないように)
+  var keys = STATE.allIgnoredKeys[STATE.machineId] || [];
+  var k = target.itemId + '|' + target.date;
+  if(keys.indexOf(k) < 0){ keys = keys.concat([k]); }
+  STATE.allIgnoredKeys[STATE.machineId] = keys;
+  // サーバ側でも削除+台帳記録
+  if(isGasConfigured){
+    enqueueSave({ machineId: STATE.machineId, issueId: issueId, itemId: target.itemId, date: target.date }, 'deleteIssue');
+  }
+  render();
+}
+
+// ============================================================
+// 経過観察リスト操作 ── 不具合リスト操作の並列版
+// ============================================================
+function updateWatch(watchId, field, value, noRender){
+  var watches = getWatches();
+  var target = null;
+  for(var i=0;i<watches.length;i++){ if(watches[i].id===watchId){ target=watches[i]; break; } }
+  if(!target) return;
+
+  // 「完了」: 経過観察完了済みシートへ移動し、画面リストから除去
+  if(field==='status' && value==='完了'){
+    target.status = '完了';
+    if(!target.doneDate) target.doneDate = todayStr();
+    STATE.allWatches[STATE.machineId] = watches.filter(function(x){ return x.id !== watchId; });
+    var dlist = STATE.allWatchDone[STATE.machineId] || [];
+    if(!dlist.some(function(x){ return x.id===watchId; })){
+      var doneCopy = {}; for(var q in target){ if(q!=='_unsaved') doneCopy[q]=target[q]; }
+      dlist = dlist.concat([doneCopy]);
+    }
+    STATE.allWatchDone[STATE.machineId] = dlist;
+    if(isGasConfigured){
+      var toSave = {}; for(var p in target){ if(p!=='_unsaved') toSave[p]=target[p]; }
+      enqueueSave({ machineId: STATE.machineId, watch: toSave }, 'completeWatch');
+    }
+    render();
+    return;
+  }
+
+  target[field] = value;
+  scheduleWatchSave(target);
+  if(!noRender) render();
+}
+
+// 経過観察をリストから削除(完了済みには移さず、台帳に記録して再生成を防ぐ)
+function deleteWatchFromList(watchId){
+  var watches = getWatches();
+  var target = null;
+  for(var i=0;i<watches.length;i++){ if(watches[i].id===watchId){ target=watches[i]; break; } }
+  if(!target) return;
+  if(!confirm('この経過観察をリストから削除しますか?\n(完了済みには残りません。削除したこの発生日のぶんは今後復活しません。\n別の日に同じ箇所が再び△になれば、新しい経過観察として表示されます)')) return;
+  STATE.allWatches[STATE.machineId] = watches.filter(function(x){ return x.id !== watchId; });
+  var keys = STATE.allWatchIgnored[STATE.machineId] || [];
+  var k = target.itemId + '|' + target.date;
+  if(keys.indexOf(k) < 0){ keys = keys.concat([k]); }
+  STATE.allWatchIgnored[STATE.machineId] = keys;
+  if(isGasConfigured){
+    enqueueSave({ machineId: STATE.machineId, watchId: watchId, itemId: target.itemId, date: target.date }, 'deleteWatch');
+  }
+  render();
+}
+
+// 経過観察保存のdebounce
+var watchSaveTimers = {};
+function scheduleWatchSave(watch){
+  if(!isGasConfigured) return;
+  var id = watch.id;
+  STATE.sync = { state:'syncing', message:'保存待機中...', at:null }; updateSyncBar();
+  if(watchSaveTimers[id]) clearTimeout(watchSaveTimers[id]);
+  watchSaveTimers[id] = setTimeout(function(){
+    delete watchSaveTimers[id];
+    var toSave = {}; for(var p in watch){ if(p!=='_unsaved') toSave[p]=watch[p]; }
+    enqueueSave({ machineId: STATE.machineId, watch: toSave }, 'saveWatch');
+  }, 800);
+}
+
+// 点検の備考を、対応する未完了の経過観察「不具合内容」に同期
+function syncNoteToWatch(itemId, text){
+  var watches = getWatches();
+  var target = null;
+  for(var i=0;i<watches.length;i++){
+    if(watches[i].itemId===itemId && watches[i].status!=='完了'){
+      if(!target || watches[i].date > target.date) target = watches[i];
+    }
+  }
+  if(!target) return;
+  if(target.detail === text) return;
+  target.detail = text;
+  scheduleWatchSave(target);
+}
+
+// 経過日数を計算
+function daysSince(dateStr){
+  if(!dateStr) return 0;
+  var d = new Date(dateStr + 'T00:00:00');
+  var now = new Date();
+  var diff = Math.floor((now - d) / (1000*60*60*24));
+  return diff < 0 ? 0 : diff;
+}
+
+function saveItems(next){
+  STATE.allItems[STATE.machineId] = next;
+  if(!isGasConfigured){ render(); return; }
+  STATE.sync = { state:'syncing', message:'保存中...', at:null };
+  render();
+  var mid = STATE.machineId;
+  // 項目全体を1回のPOSTで送る(チャンク分割の途中失敗による欠落を防ぐ)
+  postGAS('saveItems', { machineId: mid, items: next }, function(){
+    STATE.sync = { state:'editing', message:'保存しました', at:timeStr() }; updateSyncBar();
+  }, function(e){
+    // POSTが失敗した場合はチャンク送信にフォールバック
+    console.warn('POST失敗、チャンク送信にフォールバック:', e.message);
+    saveItemsChunked(mid, next, function(){
+      STATE.sync = { state:'editing', message:'保存しました', at:timeStr() }; updateSyncBar();
+    }, function(e2){
+      STATE.sync = { state:'error', message:'保存失敗: '+e2.message+' (データ保護のため画面の項目は維持されています。再度お試しください)', at:null }; updateSyncBar();
+    });
+  });
+}
+
+// POST送信(URL長制限がないので大きなデータ向き)
+function postGAS(action, body, cb, errcb, timeoutMs){
+  if(!isGasConfigured){ errcb&&errcb(new Error('GAS未設定')); return; }
+  body = body || {};
+  body.action = action;
+  var controller = null, timer = null;
+  try { controller = new AbortController(); } catch(e){}
+  var opts = {
+    method:'POST',
+    redirect:'follow',
+    headers:{'Content-Type':'text/plain;charset=utf-8'},
+    body: JSON.stringify(body)
+  };
+  if(controller){ opts.signal = controller.signal; timer = setTimeout(function(){ controller.abort(); }, timeoutMs || 20000); }
+  fetch(GAS_URL, opts).then(function(res){
+    if(timer) clearTimeout(timer);
+    if(!res.ok) throw new Error('HTTP '+res.status);
+    return res.text();
+  }).then(function(text){
+    var data;
+    try { data = JSON.parse(text); } catch(e){ throw new Error('解析失敗'); }
+    if(data.error) throw new Error(data.error);
+    cb && cb(data);
+  }).catch(function(e){
+    if(timer) clearTimeout(timer);
+    errcb && errcb(new Error(e.name==='AbortError'?'タイムアウト':e.message));
+  });
+}
+
+// ============================================================
+// 見本写真: 縮小 → アップロード → 表示
+// ============================================================
+// 画像ファイルを読み込み、最大幅/高さに縮小してJPEGのdataURLを返す
+function shrinkImage(file, maxSize, cb, errcb){
+  maxSize = maxSize || 1000;
+  var reader = new FileReader();
+  reader.onload = function(ev){
+    var img = new Image();
+    img.onload = function(){
+      var w = img.width, h = img.height;
+      if(w > h){ if(w > maxSize){ h = Math.round(h * maxSize / w); w = maxSize; } }
+      else { if(h > maxSize){ w = Math.round(w * maxSize / h); h = maxSize; } }
+      var canvas = document.createElement('canvas');
+      canvas.width = w; canvas.height = h;
+      var ctx = canvas.getContext('2d');
+      ctx.drawImage(img, 0, 0, w, h);
+      try {
+        var dataUrl = canvas.toDataURL('image/jpeg', 0.8);
+        cb(dataUrl);
+      } catch(e){ errcb && errcb(new Error('画像変換に失敗しました')); }
+    };
+    img.onerror = function(){ errcb && errcb(new Error('画像の読み込みに失敗しました')); };
+    img.src = ev.target.result;
+  };
+  reader.onerror = function(){ errcb && errcb(new Error('ファイルの読み込みに失敗しました')); };
+  reader.readAsDataURL(file);
+}
+
+// 見本写真をアップロード
+function uploadPhoto(itemId, file){
+  if(!isGasConfigured){ alert('Apps Scriptが未設定です'); return; }
+  STATE.sync = { state:'syncing', message:'写真を処理中...', at:null }; updateSyncBar();
+  shrinkImage(file, 1000, function(dataUrl){
+    STATE.sync = { state:'syncing', message:'写真をアップロード中...', at:null }; updateSyncBar();
+    postGAS('uploadPhoto', { machineId: STATE.machineId, itemId: itemId, imageData: dataUrl, mimeType: 'image/jpeg' }, function(res){
+      // 成功: ローカルの項目にphotoIdを反映
+      var items = getItems();
+      for(var i=0;i<items.length;i++){ if(items[i].id===itemId){ items[i].photoId = res.photoId; break; } }
+      // 編集モーダルを開いたままなら、そのクローンにも反映
+      if(STATE.editingItem && STATE.editingItem.id===itemId){ STATE.editingItem.photoId = res.photoId; }
+      STATE.sync = { state:'editing', message:'写真を保存しました', at:timeStr() };
+      render();
+    }, function(e){
+      STATE.sync = { state:'error', message:'写真アップロード失敗: '+e.message, at:null }; updateSyncBar();
+      alert('写真のアップロードに失敗しました: '+e.message);
+    }, 40000); // 画像は時間がかかるので40秒
+  }, function(e){
+    STATE.sync = { state:'error', message:e.message, at:null }; updateSyncBar();
+    alert(e.message);
+  });
+}
+
+// 写真IDから表示用URLを作る(Google Driveのサムネイル/閲覧URL)
+function photoUrl(photoId, thumb){
+  if(!photoId) return '';
+  if(thumb){
+    // サムネイル(軽量)
+    return 'https://drive.google.com/thumbnail?id=' + encodeURIComponent(photoId) + '&sz=w400';
+  }
+  // 拡大表示用
+  return 'https://drive.google.com/thumbnail?id=' + encodeURIComponent(photoId) + '&sz=w1600';
+}
+
+// 写真を削除(項目のphotoIdを空にして保存)
+function removePhoto(itemId){
+  if(!confirm('この見本写真を削除しますか?')) return;
+  var items = getItems();
+  for(var i=0;i<items.length;i++){ if(items[i].id===itemId){ items[i].photoId = ''; break; } }
+  // 編集モーダルを開いたままなら、そのクローンにも反映
+  if(STATE.editingItem && STATE.editingItem.id===itemId){ STATE.editingItem.photoId = ''; }
+  saveItems(items.slice());
+  render();
+}
+
+// 写真拡大モーダル
+function openPhotoModal(photoId){
+  if(!photoId) return;
+  var div = document.createElement('div');
+  div.className = 'modal-bg';
+  div.id = 'photo-modal';
+  div.innerHTML = '<div style="max-width:90vw;max-height:90vh;text-align:center">'+
+    '<img src="'+photoUrl(photoId,false)+'" style="max-width:90vw;max-height:80vh;border-radius:8px;background:#fff" alt="見本写真">'+
+    '<div style="margin-top:10px"><button class="btn" id="photo-close">閉じる</button></div></div>';
+  document.body.appendChild(div);
+  div.addEventListener('click', function(ev){ if(ev.target===div){ div.remove(); } });
+  var cb = document.getElementById('photo-close');
+  if(cb) cb.onclick = function(){ div.remove(); };
+}
+
+function initializeSheet(){
+  if(!confirm('スプレッドシートに初期点検項目(2号 33・3号 32・4号 32・5号 33項目)を書き込みます。\n既存の項目は上書きされます。\n実行しますか?')) return;
+  STATE.sync = { state:'syncing', message:'初期化中...', at:null }; updateSyncBar();
+  callGAS('init', {}, function(){
+    // 各号ラインの項目をPOSTで順番に一括送信
+    var defs = [
+      { mid:'g2', items: G2_ITEMS },
+      { mid:'g3', items: G3_ITEMS },
+      { mid:'g4', items: G4_ITEMS },
+      { mid:'g5', items: G5_ITEMS }
+    ];
+    var idx = 0;
+    function sendNext(){
+      if(idx >= defs.length){
+        refresh();
+        alert('初期化完了しました(2号 33項目・3号 32項目・4号 32項目・5号 33項目)');
+        return;
+      }
+      var d = defs[idx];
+      postGAS('saveItems', { machineId: d.mid, items: d.items }, function(){
+        idx++; sendNext();
+      }, function(e){ tryChunkFallback(); });
+    }
+    sendNext();
+  }, syncErr);
+
+  // POSTが通らない環境用のフォールバック(チャンク送信)
+  function tryChunkFallback(){
+    STATE.sync = { state:'syncing', message:'初期化中(分割送信)...', at:null }; updateSyncBar();
+    var defs = [
+      { mid:'g2', items: G2_ITEMS },
+      { mid:'g3', items: G3_ITEMS },
+      { mid:'g4', items: G4_ITEMS },
+      { mid:'g5', items: G5_ITEMS }
+    ];
+    var idx = 0;
+    function chunkNext(){
+      if(idx >= defs.length){
+        refresh();
+        alert('初期化完了しました(2号 33項目・3号 32項目・4号 32項目・5号 33項目)');
+        return;
+      }
+      var d = defs[idx];
+      sendItemsChunked(d.mid, d.items, function(){ idx++; chunkNext(); }, syncErr);
+    }
+    chunkNext();
+  }
+  function syncErr(e){ STATE.sync={state:'error',message:'初期化失敗: '+e.message,at:null}; updateSyncBar(); }
+}
+
+// 指定機械の項目をチャンク分割送信する汎用関数
+function sendItemsChunked(mid, items, onDone, onErr){
+  var chunkSize = 5;
+  var chunks = [];
+  for(var i=0;i<items.length;i+=chunkSize){ chunks.push(items.slice(i, i+chunkSize)); }
+  if(chunks.length === 0) chunks.push([]);
+  var idx = 0;
+  function step(){
+    if(idx >= chunks.length){ onDone && onDone(); return; }
+    var ci = idx;
+    callGAS('saveItemsChunk', { machineId: mid, items: chunks[ci], chunkIndex: ci, isLast: (ci===chunks.length-1) }, function(){
+      idx++;
+      STATE.sync = { state:'syncing', message:'初期化中... '+mid+' ('+idx+'/'+chunks.length+')', at:null }; updateSyncBar();
+      step();
+    }, function(e){ onErr && onErr(e); });
+  }
+  step();
+}
+
+// ============================================================
+// 操作ハンドラ
+// ============================================================
+function setCheckFilter(f){
+  STATE.checkFilter = f;
+  render();
+}
+// 最初のNG項目までスクロール
+function jumpToNG(){
+  var cur = getCurrent();
+  var items = getItems();
+  for(var i=0;i<items.length;i++){
+    if(cur.results[items[i].id]==='ng'){
+      var row = document.querySelector('[data-row="'+items[i].id+'"]');
+      if(row){ row.scrollIntoView({behavior:'smooth', block:'center'}); }
+      return;
+    }
+  }
+}
+
+function setResult(itemId, value){
+  if(!STATE.editMode) return;
+  var cur = clone(getCurrent());
+  if(cur.results[itemId] === value) delete cur.results[itemId];
+  else cur.results[itemId] = value;
+  var insp = el('inp-inspector');
+  var chk = el('inp-checker');
+  if(insp) cur.inspector = insp.value;
+  if(chk) cur.checker = chk.value;
+  // データ更新(画面全体は再描画しない)
+  storeRecord(STATE.date, cur);
+  // フィルタ中は、判定により表示対象が変わるため全体を再描画。
+  // フィルタなし(すべて表示)のときは軽量に行だけ更新。
+  if(STATE.checkFilter && STATE.checkFilter !== 'all'){
+    scheduleSave(STATE.date, cur);
+    render();
+    return;
+  }
+  // タップした行だけ更新
+  updateCheckRow(itemId);
+  // サマリー・進捗バーだけ更新
+  updateSummary();
+  // 保存をスケジュール
+  scheduleSave(STATE.date, cur);
+}
+
+// データだけ更新(描画なし)
+function storeRecord(dateKey, data){
+  var recs = {};
+  var cur = getRecords();
+  for(var k in cur) recs[k] = cur[k];
+  recs[dateKey] = data;
+  STATE.allRecords[STATE.machineId] = recs;
+}
+
+// 1行だけ再描画
+function updateCheckRow(itemId){
+  var row = document.querySelector('[data-row="'+itemId+'"]');
+  if(!row) return;
+  var cur = getCurrent();
+  var it = null;
+  var items = getItems();
+  for(var i=0;i<items.length;i++){ if(items[i].id===itemId){ it=items[i]; break; } }
+  if(!it) return;
+  var v = cur.results[itemId];
+  var note = cur.notes[itemId]||'';
+  row.className = 'check-row ' + (v==='ok'?'is-ok':v==='ng'?'is-ng':v==='tri'?'is-tri':'') + (it.photoId?' has-photo':'') + ' ' + (STATE.editMode?'':'readonly');
+  row.innerHTML = checkRowInner(it, v, note);
+  attachRowHandlers(row, it);
+}
+
+// サマリーと進捗バーだけ更新
+function updateSummary(){
+  var stats = getStats();
+  var sumEl = el('summary-box');
+  if(sumEl){
+    sumEl.innerHTML =
+      sc('点検済み', stats.done+' / '+stats.total, '') +
+      sc('△ 経過観察', stats.tri, 'var(--c-warn)') +
+      sc('× NG', stats.ng, 'var(--c-danger)');
+  }
+  var pf = el('progress-fill');
+  if(pf) pf.style.width = (stats.total?(stats.done/stats.total*100):0)+'%';
+}
+function setNote(itemId, text){
+  if(!STATE.editMode) return;
+  var cur = clone(getCurrent());
+  cur.notes[itemId] = text;
+  storeRecord(STATE.date, cur);
+  scheduleSave(STATE.date, cur);
+  // この項目が「未完了の不具合」として登録されていれば、不具合内容も同期
+  syncNoteToIssue(itemId, text);
+  // △(経過観察)として登録されていれば、そちらにも同期
+  syncNoteToWatch(itemId, text);
+}
+
+// 点検の備考を、対応する未完了不具合の「不具合内容」に同期
+function syncNoteToIssue(itemId, text){
+  var issues = getIssues();
+  // 同じ項目で未完了の不具合を探す(最新の発生日のもの)
+  var target = null;
+  for(var i=0;i<issues.length;i++){
+    if(issues[i].itemId===itemId && issues[i].status!=='完了'){
+      if(!target || issues[i].date > target.date) target = issues[i];
+    }
+  }
+  if(!target) return;
+  if(target.detail === text) return; // 変化なし
+  target.detail = text;
+  // サーバ保存(debounceで負荷軽減)
+  scheduleIssueSave(target);
+}
+function updateMeta(field, value){
+  if(!STATE.editMode) return;
+  var cur = clone(getCurrent());
+  cur[field] = value;
+  storeRecord(STATE.date, cur);
+  scheduleSave(STATE.date, cur);
+}
+
+// ============================================================
+// 点検者・確認者の名簿(NID・仕込み共通。スプレッドシートに保存)
+// ============================================================
+function addStaff(){
+  if(!STATE.editMode) return;
+  var inp = el('new-staff');
+  if(!inp) return;
+  var name = (inp.value||'').trim();
+  if(!name){ return; }
+  var names = (STATE.staffNames || []).slice();
+  if(names.indexOf(name) >= 0){ alert('「'+name+'」は既に登録されています。'); return; }
+  names.push(name);
+  STATE.staffNames = names;
+  inp.value = '';
+  saveStaffNames(names);
+  render();
+}
+function deleteStaff(name){
+  if(!STATE.editMode) return;
+  if(!confirm('「'+name+'」を名簿から削除しますか?\n(過去の点検記録に既に入力された名前はそのまま残ります)')) return;
+  var names = (STATE.staffNames || []).filter(function(n){ return n !== name; });
+  STATE.staffNames = names;
+  saveStaffNames(names);
+  render();
+}
+function saveStaffNames(names){
+  if(!isGasConfigured){ return; }
+  STATE.sync = { state:'syncing', message:'名簿を保存中...', at:null }; updateSyncBar();
+  postGAS('saveStaff', { names: names }, function(){
+    STATE.sync = { state:'editing', message:'名簿を保存しました', at:timeStr() }; updateSyncBar();
+  }, function(e){
+    STATE.sync = { state:'error', message:'名簿の保存に失敗: '+e.message, at:null }; updateSyncBar();
+  });
+}
+function clearDay(){
+  if(!STATE.editMode) return;
+  if(!confirm(STATE.date+'の点検記録を削除しますか?')) return;
+  var empty = { results:{}, notes:{}, inspector:'', checker:'' };
+  storeRecord(STATE.date, empty);
+  // 保存待ちを取り消して、即座に削除を送信
+  if(saveTimer){ clearTimeout(saveTimer); saveTimer = null; }
+  pendingData = null;
+  STATE.sync = { state:'syncing', message:'削除中...', at:null };
+  if(isGasConfigured){
+    callGAS('saveRecord', { machineId: STATE.machineId, date: STATE.date, data: empty }, function(){
+      STATE.sync = { state:'editing', message:'削除しました', at:timeStr() }; render();
+    }, function(e){
+      STATE.sync = { state:'error', message:'削除失敗: '+e.message, at:null }; render();
+    });
+  } else {
+    render();
+  }
+}
+
+// 保存スケジュール(debounce)。画面再描画はしない。
+function scheduleSave(dateKey, data){
+  if(!isGasConfigured){ return; }
+  STATE.sync = { state:'syncing', message:'保存待機中...', at:null };
+  updateSyncBar();
+  pendingData = { machineId: STATE.machineId, date: dateKey, data: data };
+  if(saveTimer) clearTimeout(saveTimer);
+  saveTimer = setTimeout(function(){
+    if(!pendingData) return;
+    var sending = pendingData;
+    pendingData = null;
+    enqueueSave(sending, 'saveRecord');
+  }, 800);
+}
+
+// 不具合保存のdebounce(同じ不具合への連続編集を1回にまとめる)
+var issueSaveTimers = {};
+function scheduleIssueSave(issue){
+  if(!isGasConfigured) return;
+  var id = issue.id;
+  STATE.sync = { state:'syncing', message:'保存待機中...', at:null }; updateSyncBar();
+  if(issueSaveTimers[id]) clearTimeout(issueSaveTimers[id]);
+  issueSaveTimers[id] = setTimeout(function(){
+    delete issueSaveTimers[id];
+    var toSave = {}; for(var p in issue){ if(p!=='_unsaved') toSave[p]=issue[p]; }
+    enqueueSave({ machineId: STATE.machineId, issue: toSave }, 'saveIssue');
+  }, 800);
+}
+function clone(o){ return JSON.parse(JSON.stringify(o)); }
+
+function addItem(){
+  var noInput = el('new-no') ? el('new-no').value.trim() : '';
+  var place = el('new-place').value;
+  var side = el('new-side').value;
+  var content = el('new-content').value;
+  if(!content.trim()){ alert('内容を入力してください'); return; }
+  var items = getItems();
+  var newId = 'item_' + Date.now() + '_' + Math.floor(Math.random()*1000);
+  var newItem = { no:0, id:newId, place:place, side:side, content:content };
+  var next = items.slice();
+
+  if(noInput !== ''){
+    var insNo = parseInt(noInput, 10);
+    if(isNaN(insNo) || insNo < 1){ alert('No.は1以上の数字で入力してください'); return; }
+    // No.順に並べ、指定位置に挿入。以降は自動で繰り下がる(連番振り直し)
+    next.sort(function(a,b){ return (a.no||0) - (b.no||0); });
+    // 挿入位置を決定: 指定No.以上の最初の項目の前に入れる
+    var insertIdx = next.length;
+    for(var i=0;i<next.length;i++){
+      if((next[i].no||0) >= insNo){ insertIdx = i; break; }
+    }
+    newItem.no = insNo;
+    next.splice(insertIdx, 0, newItem);
+  } else {
+    // 自動採番:末尾に追加
+    next.sort(function(a,b){ return (a.no||0) - (b.no||0); });
+    next.push(newItem);
+  }
+  // 全体を1から連番に振り直し(これで重複や飛びが解消され、常に整然と並ぶ)
+  renumber(next);
+  saveItems(next);
+}
+
+// 配列の項目を、並び順のまま 1,2,3,... に振り直す
+function renumber(arr){
+  for(var i=0;i<arr.length;i++){ arr[i].no = i+1; }
+}
+function deleteItem(id){
+  if(!confirm('この点検項目を削除しますか?')) return;
+  var next = getItems().filter(function(it){ return it.id!==id; });
+  // 削除後、欠番が出ないよう連番に振り直す
+  next.sort(function(a,b){ return (a.no||0) - (b.no||0); });
+  renumber(next);
+  saveItems(next);
+}
+function openEditItem(id){
+  var it = getItems().filter(function(x){ return x.id===id; })[0];
+  if(it){ STATE.editingItem = clone(it); render(); }
+}
+function saveEditItem(){
+  var e = STATE.editingItem;
+  var noInput = el('edit-no') ? el('edit-no').value.trim() : '';
+  var moved = false;
+  var targetNo = null;
+  if(noInput !== ''){
+    var n = parseInt(noInput, 10);
+    if(!isNaN(n) && n >= 1){ targetNo = n; moved = (n !== e.no); }
+  }
+  e.place = el('edit-place').value;
+  e.side = el('edit-side').value;
+  e.content = el('edit-content').value;
+  var next = getItems().map(function(it){ return it.id===e.id ? e : it; });
+  if(targetNo !== null && moved){
+    // No.を変更した場合: いったん対象を外し、指定位置に挿入して全体再採番
+    var others = next.filter(function(it){ return it.id !== e.id; });
+    others.sort(function(a,b){ return (a.no||0) - (b.no||0); });
+    var insertIdx = others.length;
+    for(var i=0;i<others.length;i++){
+      if((others[i].no||0) >= targetNo){ insertIdx = i; break; }
+    }
+    e.no = targetNo;
+    others.splice(insertIdx, 0, e);
+    next = others;
+  } else {
+    next.sort(function(a,b){ return (a.no||0) - (b.no||0); });
+  }
+  renumber(next);
+  STATE.editingItem = null;
+  saveItems(next);
+}
+
+// 保存待ちがあれば即座に送信(画面切替・モード変更の前に呼ぶ)
+function flushSave(){
+  if(saveTimer){ clearTimeout(saveTimer); saveTimer = null; }
+  if(!pendingData) return;
+  var sending = pendingData;
+  pendingData = null;
+  enqueueSave(sending, 'saveRecord');
+}
+
+function toggleEditMode(){
+  if(STATE.editMode){ flushSave(); STATE.editMode=false; render(); }
+  else if(confirm('編集モードに入ります。\n他の人と同時編集すると、後から保存した方の内容で上書きされます。\n編集を始めますか?')){
+    STATE.editMode=true; render();
+  }
+}
+
+// 点検途中(入力あり・未点検が残る)で点検タブを離れるときの確認
+function confirmLeaveCheck(){
+  if(STATE.tab !== 'check') return true;
+  if(!STATE.editMode) return true;
+  var stats = getStats();
+  // 入力が1件以上あり、かつ未点検が残っている場合だけ確認
+  if(stats.done > 0 && stats.done < stats.total){
+    return confirm('未点検の項目が '+(stats.total-stats.done)+' 件あります。\nこのまま移動しますか?');
+  }
+  return true;
+}
+function switchMachine(mid){ if(!confirmLeaveCheck()) return; flushSave(); STATE.machineId=mid; STATE.editingItem=null; STATE.checkFilter='all'; render(); }
+function switchTab(t){ if(t!=='check' && !confirmLeaveCheck()) return; flushSave(); STATE.tab=t; if(t==='issues') syncIssuesFromRecords(); if(t==='watch'){ syncWatchesFromRecords(); escalateWatchToNG(); } render(); }
+function openDate(d){ flushSave(); STATE.date=d; STATE.tab='check'; render(); }
+
+// ============================================================
+// 印刷
+// ============================================================
+function doPrintMonth(){
+  var m = getMachine();
+  var styleEl = el('dynamic-print-style');
+  if(!styleEl){ styleEl=document.createElement('style'); styleEl.id='dynamic-print-style'; document.head.appendChild(styleEl); }
+  styleEl.textContent = '@media print { @page { size: '+m.paperSize+' landscape; margin: 6mm; } }';
+  buildPrintArea();
+  el('print-area').classList.add('show');
+  setTimeout(function(){
+    window.print();
+    setTimeout(function(){ el('print-area').classList.remove('show'); }, 500);
+  }, 100);
+}
+
+// ============================================================
+// Excel出力(XLSX があれば)
+// ============================================================
+function exportExcel(){
+  if(typeof XLSX==='undefined'){ alert('Excel機能は現在利用できません(ライブラリ読込不可)。印刷機能をご利用ください。'); return; }
+  var m = getMachine(); var items = getItems(); var records = getRecords();
+  var days = daysInMonth(STATE.printMonth);
+  var mm = STATE.printMonth.split('-')[1];
+  var header = ['No.','場所','側','点検内容'];
+  for(var d=1;d<=days;d++) header.push(String(d));
+  header.push('備考');
+  var aoa = [[mm+'月度 '+m.name+m.subtitle], [], header];
+  items.forEach(function(it){
+    var row = [it.no, it.place, it.side, it.content];
+    var notes = [];
+    for(var d=1;d<=days;d++){
+      var dk = STATE.printMonth+'-'+pad(d);
+      var rec = records[dk];
+      var v = rec&&rec.results ? rec.results[it.id] : null;
+      row.push(v==='ok'?'○':v==='ng'?'×':v==='tri'?'△':'');
+      var note = rec&&rec.notes ? rec.notes[it.id] : null;
+      if(note&&(v==='ng'||v==='tri')) notes.push(d+'日: '+note);
+    }
+    row.push(notes.join(' / '));
+    aoa.push(row);
+  });
+  var ws = XLSX.utils.aoa_to_sheet(aoa);
+  var wb = XLSX.utils.book_new();
+  XLSX.utils.book_append_sheet(wb, ws, mm+'月');
+
+  // 不具合一覧シート(未完了・完了の両方)
+  var openIssues = getIssues().filter(function(is){ return is.status!=='完了'; })
+    .sort(function(a,b){ return (a.date||'').localeCompare(b.date||''); });
+  var doneIssues = getDoneIssues().slice()
+    .sort(function(a,b){ return (b.doneDate||'').localeCompare(a.doneDate||''); });
+  var iaoa = [];
+  iaoa.push(['■ 未解決の不具合一覧 ('+openIssues.length+'件) ※前月からの繰り越し含む']);
+  iaoa.push(['発生日','No.','場所','側','点検内容','不具合内容','対応コメント','担当者','対応状況']);
+  if(openIssues.length===0){
+    iaoa.push(['未解決の不具合はありません。']);
+  } else {
+    openIssues.forEach(function(is){
+      iaoa.push([is.date||'', (is.no!=null?is.no:''), is.place||'', is.side||'', is.content||'', is.detail||'', is.comment||'', is.assignee||'', is.status||'']);
+    });
+  }
+  iaoa.push([]);
+  iaoa.push(['■ 完了した不具合一覧 ('+doneIssues.length+'件)']);
+  iaoa.push(['発生日','No.','完了日','場所','側','点検内容','不具合内容','対応コメント','担当者']);
+  if(doneIssues.length===0){
+    iaoa.push(['完了した不具合はありません。']);
+  } else {
+    doneIssues.forEach(function(is){
+      iaoa.push([is.date||'', (is.no!=null?is.no:''), is.doneDate||'', is.place||'', is.side||'', is.content||'', is.detail||'', is.comment||'', is.assignee||'']);
+    });
+  }
+  var iws = XLSX.utils.aoa_to_sheet(iaoa);
+  iws['!cols'] = [{wch:12},{wch:6},{wch:14},{wch:12},{wch:32},{wch:32},{wch:28},{wch:12},{wch:10}];
+  XLSX.utils.book_append_sheet(wb, iws, '不具合一覧');
+
+  // 経過観察一覧シート(未完了・完了の両方)
+  var openWatches = getWatches().filter(function(w){ return w.status!=='完了'; })
+    .sort(function(a,b){ return (a.date||'').localeCompare(b.date||''); });
+  var doneWatches = getWatchDone().slice()
+    .sort(function(a,b){ return (b.doneDate||'').localeCompare(a.doneDate||''); });
+  var waoa = [];
+  waoa.push(['■ 経過観察中の一覧 ('+openWatches.length+'件) ※前月からの繰り越し含む']);
+  waoa.push(['発生日','No.','場所','側','点検内容','観察内容','対応コメント','担当者','対応状況']);
+  if(openWatches.length===0){
+    waoa.push(['経過観察中の項目はありません。']);
+  } else {
+    openWatches.forEach(function(w){
+      waoa.push([w.date||'', (w.no!=null?w.no:''), w.place||'', w.side||'', w.content||'', w.detail||'', w.comment||'', w.assignee||'', w.status||'']);
+    });
+  }
+  waoa.push([]);
+  waoa.push(['■ 完了した経過観察一覧 ('+doneWatches.length+'件)']);
+  waoa.push(['発生日','No.','完了日','場所','側','点検内容','観察内容','対応コメント','担当者']);
+  if(doneWatches.length===0){
+    waoa.push(['完了した経過観察はありません。']);
+  } else {
+    doneWatches.forEach(function(w){
+      waoa.push([w.date||'', (w.no!=null?w.no:''), w.doneDate||'', w.place||'', w.side||'', w.content||'', w.detail||'', w.comment||'', w.assignee||'']);
+    });
+  }
+  var wws = XLSX.utils.aoa_to_sheet(waoa);
+  wws['!cols'] = [{wch:12},{wch:6},{wch:14},{wch:12},{wch:32},{wch:32},{wch:28},{wch:12},{wch:10}];
+  XLSX.utils.book_append_sheet(wb, wws, '経過観察一覧');
+
+  XLSX.writeFile(wb, m.name+'_'+STATE.printMonth+'.xlsx');
+}
+
+// ============================================================
+// 集計
+// ============================================================
+function getStats(){
+  var cur = getCurrent(); var ok=0,ng=0,tri=0;
+  for(var k in cur.results){ if(cur.results[k]==='ok')ok++; else if(cur.results[k]==='ng')ng++; else if(cur.results[k]==='tri')tri++; }
+  return { ok:ok, ng:ng, tri:tri, done:ok+ng+tri, total:getItems().length };
+}
+function getGrouped(){
+  var g={}, order=[];
+  getItems().forEach(function(it){
+    if(!g[it.place]){ g[it.place]=[]; order.push(it.place); }
+    g[it.place].push(it);
+  });
+  return { groups:g, order:order };
+}
+function getDateList(){
+  var recs = getRecords(); var list=[];
+  for(var d in recs){
+    var r = recs[d];
+    if(r && r.results && Object.keys(r.results).length>0) list.push(d);
+  }
+  list.sort(function(a,b){ return b.localeCompare(a); });
+  return list;
+}
+function getMachineStat(mid){
+  var recs = STATE.allRecords[mid]||{}; var c=0;
+  for(var d in recs){ var r=recs[d]; if(r&&r.results&&Object.keys(r.results).length>0)c++; }
+  return c;
+}
+
+// ============================================================
+// レンダリング(後半のapp_render.jsで定義)
+// ============================================================
+</script>
+<script>
+// ============================================================
+// レンダリング
+// ============================================================
+function render(){
+  var root = el('root');
+  if(STATE.loading){
+    root.innerHTML = '<div class="empty"><div class="spinner"></div><div style="margin-top:12px;">読み込み中... (Apps Scriptと通信中)</div></div>';
+    return;
+  }
+  if(!isGasConfigured){
+    root.innerHTML = '<div class="err-box" style="background:var(--c-warn-bg);border-color:#FAC775;color:var(--c-warn);">'+
+      '<h3>⚠ Google Apps Script の設定が必要です</h3>'+
+      '<p>このHTMLファイルの GAS_URL を、ご自身の Apps Script ウェブアプリURLに書き換えてください。</p></div>';
+    return;
+  }
+
+  var html = '';
+  html += renderMachineSelector();
+  html += renderSyncBar();
+  html += renderTabs();
+  if(STATE.tab==='check') html += renderCheck();
+  else if(STATE.tab==='issues') html += renderIssues();
+  else if(STATE.tab==='watch') html += renderWatches();
+  else if(STATE.tab==='history') html += renderHistory();
+  else if(STATE.tab==='items') html += renderItems();
+  else if(STATE.tab==='monthly') html += renderMonthly();
+  else if(STATE.tab==='analysis') html += renderAnalysis();
+  root.innerHTML = html;
+  window.__appRendered = true;
+
+  if(STATE.editingItem) renderEditModal();
+  attachHandlers();
+}
+
+function renderMachineSelector(){
+  var h = '<div class="machine-selector no-print">';
+  ['g2','g3','g4','g5'].forEach(function(mid){
+    var m = MACHINES[mid];
+    h += '<button class="machine-tab '+(STATE.machineId===mid?'active':'')+'" data-machine="'+mid+'">'+
+      esc(m.name)+'<span class="badge">'+getMachineStat(mid)+'日分</span></button>';
+  });
+  h += '</div>';
+  return h;
+}
+
+function syncDotClass(){
+  var s = STATE.sync.state;
+  return s==='online'?'online':s==='editing'?'editing':s==='syncing'?'syncing':s==='error'?'error':'';
+}
+
+function renderTabs(){
+  var dl = getDateList().length;
+  var openIssues = getIssues().filter(function(is){ return is.status!=='完了'; }).length;
+  var issueLabel = '不具合リスト' + (openIssues>0 ? ' ('+openIssues+')' : '');
+  var openWatches = getWatches().filter(function(w){ return w.status!=='完了'; }).length;
+  var watchLabel = '経過観察' + (openWatches>0 ? ' ('+openWatches+')' : '');
+  var tabs = [['check','点検実施'],['issues',issueLabel],['watch',watchLabel],['history','履歴 ('+dl+')'],['analysis','分析'],['items','項目管理'],['monthly','月次出力']];
+  var h = '<div class="tabs no-print">';
+  tabs.forEach(function(t){
+    h += '<button class="tab '+(STATE.tab===t[0]?'active':'')+'" data-tab="'+t[0]+'">'+t[1]+'</button>';
+  });
+  h += '</div>';
+  return h;
+}
+
+function staffSelectHTML(id, current, dis){
+  var names = STATE.staffNames || [];
+  var h = '<select id="'+id+'" '+dis+'>';
+  h += '<option value="">(未選択)</option>';
+  var found = false;
+  names.forEach(function(n){
+    var sel = (n===current) ? ' selected' : '';
+    if(n===current) found = true;
+    h += '<option value="'+esc(n)+'"'+sel+'>'+esc(n)+'</option>';
+  });
+  // 保存済みだがリストに無い名前は、選択肢として残す(消えないように)
+  if(current && !found){
+    h += '<option value="'+esc(current)+'" selected>'+esc(current)+' (リスト外)</option>';
+  }
+  h += '</select>';
+  return h;
+}
+
+function assigneeSelectHTML(issueId, current){
+  var names = STATE.staffNames || [];
+  var style = 'height:34px;width:120px;padding:0 8px;border:1px solid var(--c-bd);border-radius:var(--r-md);font-family:var(--font);background:var(--c-bg);color:var(--c-text)';
+  var h = '<select data-issue-assignee="'+issueId+'" style="'+style+'">';
+  h += '<option value="">(未選択)</option>';
+  var found = false;
+  names.forEach(function(n){
+    var sel = (n===current) ? ' selected' : '';
+    if(n===current) found = true;
+    h += '<option value="'+esc(n)+'"'+sel+'>'+esc(n)+'</option>';
+  });
+  if(current && !found){
+    h += '<option value="'+esc(current)+'" selected>'+esc(current)+' (リスト外)</option>';
+  }
+  h += '</select>';
+  return h;
+}
+
+function renderCheck(){
+  var cur = getCurrent();
+  var stats = getStats();
+  var ed = STATE.editMode;
+  var dis = ed ? '' : 'disabled';
+  var h = '';
+  h += '<div class="top-bar no-print">';
+  h += '<div class="field"><label>日付</label><input type="date" id="inp-date" value="'+STATE.date+'"></div>';
+  h += '<div class="field"><label>点検者</label>'+staffSelectHTML('inp-inspector', cur.inspector, dis)+'</div>';
+  h += '<div class="field"><label>確認者</label>'+staffSelectHTML('inp-checker', cur.checker, dis)+'</div>';
+  h += '</div>';
+
+  h += '<div class="summary no-print" id="summary-box">';
+  h += sc('点検済み', stats.done+' / '+stats.total, '');
+  h += sc('△ 経過観察', stats.tri, 'var(--c-warn)');
+  h += sc('× NG', stats.ng, 'var(--c-danger)');
+  h += '</div>';
+
+  h += '<div class="progress-bar no-print"><div class="progress-fill" id="progress-fill" style="width:'+(stats.total?(stats.done/stats.total*100):0)+'%"></div></div>';
+
+  // フィルタ + NGジャンプ(取りこぼし防止の導線)
+  var f = STATE.checkFilter || 'all';
+  var undone = stats.total - stats.done;
+  h += '<div class="no-print" style="display:flex;gap:8px;flex-wrap:wrap;align-items:center;margin-bottom:12px">';
+  h += '<div class="filter-group">';
+  h += '<button class="filter-btn '+(f==='all'?'on':'')+'" data-filter="all">すべて ('+stats.total+')</button>';
+  h += '<button class="filter-btn '+(f==='undone'?'on':'')+'" data-filter="undone">未点検 ('+undone+')</button>';
+  h += '<button class="filter-btn '+(f==='tri'?'on':'')+'" data-filter="tri">△ ('+stats.tri+')</button>';
+  h += '<button class="filter-btn '+(f==='ng'?'on':'')+'" data-filter="ng">NG ('+stats.ng+')</button>';
+  h += '</div>';
+  if(stats.ng>0){ h += '<button class="btn sm danger" id="btn-jump-ng" style="margin-left:auto">⚠ NGへ移動</button>'; }
+  h += '</div>';
+
+  h += '<div class="no-print">';
+  var gr = getGrouped();
+  var shownTotal = 0;
+  gr.order.forEach(function(place){
+    var list = gr.groups[place];
+    // このグループ内で、フィルタに合致する項目だけ抽出
+    var visible = list.filter(function(it){
+      var v = cur.results[it.id];
+      if(f==='undone') return !v;
+      if(f==='ng') return v==='ng';
+      if(f==='tri') return v==='tri';
+      return true;
+    });
+    if(visible.length===0) return; // フィルタで空のグループは見出しごと隠す
+    // グループ進捗(このグループの完了数/項目数)
+    var gdone = 0;
+    list.forEach(function(it){ if(cur.results[it.id]) gdone++; });
+    h += '<div class="group-header">📁 '+esc(place)+
+      ' <span style="font-weight:400;margin-left:6px">('+gdone+'/'+list.length+' 完了)</span></div>';
+    visible.forEach(function(it){
+      shownTotal++;
+      var v = cur.results[it.id];
+      var note = cur.notes[it.id]||'';
+      var cls = v==='ok'?'is-ok':v==='ng'?'is-ng':v==='tri'?'is-tri':'';
+      if(it.photoId) cls += ' has-photo';
+      h += '<div class="check-row '+cls+' '+(ed?'':'readonly')+'" data-row="'+it.id+'">';
+      h += checkRowInner(it, v, note);
+      h += '</div>';
+    });
+  });
+  if(shownTotal===0){
+    h += '<div class="empty">'+(f==='undone'?'未点検の項目はありません 👍':f==='ng'?'NGの項目はありません 👍':f==='tri'?'△の項目はありません 👍':'項目がありません')+'</div>';
+  }
+  h += '</div>';
+
+  h += '<div class="no-print" style="margin-top:20px;display:flex;justify-content:space-between;flex-wrap:wrap;gap:8px">';
+  h += '<button class="btn danger" id="btn-clearday" '+dis+'>🗑 この日の記録を削除</button>';
+  h += '</div>';
+  return h;
+}
+
+// 1行分の中身(check-rowの内側)を生成
+function checkRowInner(it, v, note){
+  var dis = STATE.editMode ? '' : 'disabled';
+  var h = '';
+  h += '<div class="row-no">'+it.no+'</div>';
+  if(it.photoId){
+    h += '<img class="row-photo" src="'+photoUrl(it.photoId,true)+'" data-photo="'+it.photoId+'" alt="見本写真" loading="lazy">';
+  }
+  h += '<div class="row-body"><div><span class="row-place">'+esc(it.place)+'</span>'+(it.side?'<span class="row-side">'+esc(it.side)+'</span>':'')+'</div>';
+  h += '<div class="row-content">'+esc(it.content)+'</div></div>';
+  h += '<div class="judge-group">';
+  h += '<button class="judge-btn '+(v==='ok'?'ok-on':'')+'" data-result="ok" data-id="'+it.id+'" '+dis+'>○</button>';
+  h += '<button class="judge-btn '+(v==='tri'?'tri-on':'')+'" data-result="tri" data-id="'+it.id+'" '+dis+'>△</button>';
+  h += '<button class="judge-btn '+(v==='ng'?'ng-on':'')+'" data-result="ng" data-id="'+it.id+'" '+dis+'>×</button>';
+  h += '</div>';
+  if(v==='ng'){
+    h += '<div class="ng-note"><textarea data-note="'+it.id+'" placeholder="不具合内容を記入(任意)" '+dis+'>'+esc(note)+'</textarea></div>';
+  } else if(v==='tri'){
+    h += '<div class="tri-note"><textarea data-note="'+it.id+'" placeholder="経過観察の内容を記入(任意)" '+dis+'>'+esc(note)+'</textarea></div>';
+  }
+  return h;
+}
+
+// 1行内のボタン・テキストエリアにハンドラを付ける
+function attachRowHandlers(row, it){
+  var btns = row.querySelectorAll('[data-result]');
+  for(var i=0;i<btns.length;i++){
+    btns[i].onclick = (function(id,val){ return function(){ setResult(id,val); }; })(btns[i].getAttribute('data-id'), btns[i].getAttribute('data-result'));
+  }
+  var ta = row.querySelector('[data-note]');
+  if(ta){
+    ta.onchange = (function(id){ return function(){ setNote(id, this.value); }; })(ta.getAttribute('data-note'));
+  }
+  var ph = row.querySelector('[data-photo]');
+  if(ph){
+    ph.onclick = (function(pid){ return function(){ openPhotoModal(pid); }; })(ph.getAttribute('data-photo'));
+  }
+}
+function sc(label, value, color){
+  return '<div class="sc"><div class="sc-label">'+label+'</div><div class="sc-value" style="color:'+(color||'inherit')+'">'+value+'</div></div>';
+}
+
+function renderIssues(){
+  var m = getMachine();
+  var issues = getIssues();
+  // 未完了のみ表示(完了したものは画面から消す。データはシートに残る)
+  var open = issues.filter(function(is){ return is.status!=='完了'; }).sort(function(a,b){ return a.date.localeCompare(b.date); });
+
+  var h = '<div style="padding:14px;background:var(--c-danger-bg);border:1px solid var(--c-danger-bd);border-radius:var(--r-lg);margin-bottom:14px;font-size:14px;color:var(--c-text2)">';
+  h += '<b style="color:var(--c-danger)">'+esc(m.name)+' 不具合リスト</b><br>';
+  h += '点検で×がついた項目が自動で登録されます。「完了」にすると一覧から消え、スプレッドシートの「完了済み」シートへ移動します。';
+  h += '</div>';
+
+  if(open.length===0){
+    h += '<div class="empty">未解決の不具合はありません 👍</div>';
+    return h;
+  }
+
+  h += '<div style="font-size:14px;font-weight:500;color:var(--c-danger);margin:8px 0">未解決 ('+open.length+'件)</div>';
+  open.forEach(function(is){ h += issueCard(is); });
+  return h;
+}
+
+function issueCard(is){
+  var days = daysSince(is.date);
+  var statusColors = { '未着手':'var(--c-danger)', '対応中':'var(--c-warn)', '完了':'var(--c-success)' };
+  var sc = statusColors[is.status] || 'var(--c-text2)';
+  var isDone = is.status==='完了';
+  var monthLabel = is.date ? (is.date.split('-')[0]+'年'+is.date.split('-')[1]+'月') : '';
+  var h = '<div style="padding:14px;background:'+(isDone?'var(--c-bg2)':'var(--c-bg)')+';border:1px solid '+(isDone?'var(--c-bd)':'var(--c-danger-bd)')+';border-radius:var(--r-lg);margin-bottom:10px;'+(isDone?'opacity:0.75':'')+'">';
+  // ヘッダ行
+  h += '<div style="display:flex;justify-content:space-between;align-items:flex-start;gap:10px;flex-wrap:wrap">';
+  h += '<div style="flex:1;min-width:200px">';
+  h += '<div><span class="row-place">'+esc(is.place)+'</span>'+(is.side?'<span class="row-side">'+esc(is.side)+'</span>':'')+' <span style="font-size:12px;color:var(--c-text3)">No.'+esc(is.no)+'</span></div>';
+  h += '<div style="font-size:15px;margin-top:4px">'+esc(is.content)+'</div>';
+  h += '</div>';
+  // 経過バッジ
+  h += '<div style="text-align:right;font-size:12px;color:var(--c-text2)">';
+  h += '発生: '+esc(monthLabel)+'<br>';
+  if(!isDone){ h += '<span style="color:'+(days>=30?'var(--c-danger)':days>=14?'var(--c-warn)':'var(--c-text2)')+';font-weight:500">経過 '+days+'日</span>'; }
+  else { h += '完了: '+esc(is.doneDate); }
+  h += '</div>';
+  h += '</div>';
+  // 不具合内容(編集可)
+  h += '<div style="margin-top:10px">';
+  h += '<div style="display:flex;align-items:center;flex-wrap:wrap;margin-bottom:2px"><label style="font-size:12px;color:var(--c-danger)">不具合内容</label>'+defectNumBadge(parseDefectNumbers(is.detail))+'</div>';
+  h += '<textarea data-issue-detail="'+is.id+'" placeholder="どのような異常か" style="width:100%;min-height:42px;padding:8px 10px;border:1px solid var(--c-danger-bd);border-radius:var(--r-md);font-size:14px;font-family:var(--font);background:var(--c-danger-bg);color:var(--c-text);box-sizing:border-box;resize:vertical">'+esc(is.detail)+'</textarea>';
+  h += '</div>';
+  // 対応コメント(編集可)
+  h += '<div style="margin-top:8px">';
+  h += '<label style="font-size:12px;color:var(--c-info);display:block;margin-bottom:2px">対応コメント(経緯・進捗メモ)</label>';
+  h += '<textarea data-issue-comment="'+is.id+'" placeholder="対応の経緯や進捗を記入" style="width:100%;min-height:42px;padding:8px 10px;border:1px solid var(--c-info-bd);border-radius:var(--r-md);font-size:14px;font-family:var(--font);background:var(--c-info-bg);color:var(--c-text);box-sizing:border-box;resize:vertical">'+esc(is.comment||'')+'</textarea>';
+  h += '</div>';
+  // 操作行: 担当者・状況
+  h += '<div style="display:flex;gap:10px;align-items:center;margin-top:10px;flex-wrap:wrap">';
+  h += '<label style="font-size:12px;color:var(--c-text2)">担当: '+assigneeSelectHTML(is.id, is.assignee)+'</label>';
+  h += '<label style="font-size:12px;color:var(--c-text2)">状況: <select data-issue-status="'+is.id+'" style="height:34px;padding:0 8px;border:1px solid var(--c-bd);border-radius:var(--r-md);font-family:var(--font);color:'+sc+';font-weight:500">';
+  ['未着手','対応中','完了'].forEach(function(s){
+    h += '<option value="'+s+'" '+(is.status===s?'selected':'')+'>'+s+'</option>';
+  });
+  h += '</select></label>';
+  if(!isDone){
+    h += '<button class="btn sm danger" data-issue-delete="'+is.id+'" style="margin-left:auto">🗑 削除</button>';
+  }
+  h += '</div>';
+  h += '</div>';
+  return h;
+}
+
+// ============================================================
+// 経過観察リスト ── 不具合リストの並列版(△から自動生成)
+// ============================================================
+function renderWatches(){
+  var m = getMachine();
+  var watches = getWatches();
+  var open = watches.filter(function(w){ return w.status!=='完了'; }).sort(function(a,b){ return a.date.localeCompare(b.date); });
+
+  var h = '<div style="padding:14px;background:var(--c-warn-bg);border:1px solid #FAC775;border-radius:var(--r-lg);margin-bottom:14px;font-size:14px;color:var(--c-text2)">';
+  h += '<b style="color:var(--c-warn)">'+esc(m.name)+' 経過観察リスト</b><br>';
+  h += '点検で△がついた項目が自動で登録されます。「完了」にすると一覧から消え、スプレッドシートの「経過観察完了済み」シートへ移動します。';
+  h += '</div>';
+
+  if(open.length===0){
+    h += '<div class="empty">経過観察中の項目はありません 👍</div>';
+    return h;
+  }
+
+  h += '<div style="font-size:14px;font-weight:500;color:var(--c-warn);margin:8px 0">経過観察中 ('+open.length+'件)</div>';
+  open.forEach(function(w){ h += watchCard(w); });
+  return h;
+}
+
+function watchCard(w){
+  var days = daysSince(w.date);
+  var statusColors = { '未着手':'var(--c-warn)', '対応中':'var(--c-info)', '完了':'var(--c-success)' };
+  var scol = statusColors[w.status] || 'var(--c-text2)';
+  var monthLabel = w.date ? (w.date.split('-')[0]+'年'+w.date.split('-')[1]+'月') : '';
+  var h = '<div style="padding:14px;background:var(--c-bg);border:1px solid #FAC775;border-radius:var(--r-lg);margin-bottom:10px">';
+  // ヘッダ行
+  h += '<div style="display:flex;justify-content:space-between;align-items:flex-start;gap:10px;flex-wrap:wrap">';
+  h += '<div style="flex:1;min-width:200px">';
+  h += '<div><span class="row-place">'+esc(w.place)+'</span>'+(w.side?'<span class="row-side">'+esc(w.side)+'</span>':'')+' <span style="font-size:12px;color:var(--c-text3)">No.'+esc(w.no)+'</span></div>';
+  h += '<div style="font-size:15px;margin-top:4px">'+esc(w.content)+'</div>';
+  h += '</div>';
+  // 経過バッジ
+  h += '<div style="text-align:right;font-size:12px;color:var(--c-text2)">';
+  h += '発生: '+esc(monthLabel)+'<br>';
+  h += '<span style="color:'+(days>=30?'var(--c-danger)':days>=14?'var(--c-warn)':'var(--c-text2)')+';font-weight:500">経過 '+days+'日</span>';
+  h += '</div>';
+  h += '</div>';
+  // 観察内容(編集可)
+  h += '<div style="margin-top:10px">';
+  h += '<div style="display:flex;align-items:center;flex-wrap:wrap;margin-bottom:2px"><label style="font-size:12px;color:var(--c-warn)">観察内容</label>'+defectNumBadge(parseDefectNumbers(w.detail))+'</div>';
+  h += '<textarea data-watch-detail="'+w.id+'" placeholder="どのような状態か" style="width:100%;min-height:42px;padding:8px 10px;border:1px solid #FAC775;border-radius:var(--r-md);font-size:14px;font-family:var(--font);background:var(--c-warn-bg);color:var(--c-text);box-sizing:border-box;resize:vertical">'+esc(w.detail)+'</textarea>';
+  h += '</div>';
+  // 対応コメント(編集可)
+  h += '<div style="margin-top:8px">';
+  h += '<label style="font-size:12px;color:var(--c-info);display:block;margin-bottom:2px">対応コメント(経緯・進捗メモ)</label>';
+  h += '<textarea data-watch-comment="'+w.id+'" placeholder="対応の経緯や進捗を記入" style="width:100%;min-height:42px;padding:8px 10px;border:1px solid var(--c-info-bd);border-radius:var(--r-md);font-size:14px;font-family:var(--font);background:var(--c-info-bg);color:var(--c-text);box-sizing:border-box;resize:vertical">'+esc(w.comment||'')+'</textarea>';
+  h += '</div>';
+  // 操作行: 担当者・状況・削除
+  h += '<div style="display:flex;gap:10px;align-items:center;margin-top:10px;flex-wrap:wrap">';
+  h += '<label style="font-size:12px;color:var(--c-text2)">担当: '+watchAssigneeSelectHTML(w.id, w.assignee)+'</label>';
+  h += '<label style="font-size:12px;color:var(--c-text2)">状況: <select data-watch-status="'+w.id+'" style="height:34px;padding:0 8px;border:1px solid var(--c-bd);border-radius:var(--r-md);font-family:var(--font);color:'+scol+';font-weight:500">';
+  ['未着手','対応中','完了'].forEach(function(s){
+    h += '<option value="'+s+'" '+(w.status===s?'selected':'')+'>'+s+'</option>';
+  });
+  h += '</select></label>';
+  h += '<button class="btn sm danger" data-watch-delete="'+w.id+'" style="margin-left:auto">🗑 削除</button>';
+  h += '</div>';
+  h += '</div>';
+  return h;
+}
+
+// 経過観察の担当者select(不具合版と同じ名簿を使う)
+function watchAssigneeSelectHTML(watchId, current){
+  var names = STATE.staffNames || [];
+  var style = 'height:34px;width:120px;padding:0 8px;border:1px solid var(--c-bd);border-radius:var(--r-md);font-family:var(--font);background:var(--c-bg);color:var(--c-text)';
+  var h = '<select data-watch-assignee="'+watchId+'" style="'+style+'">';
+  h += '<option value="">(未選択)</option>';
+  var found = false;
+  names.forEach(function(n){
+    var sel = (n===current) ? ' selected' : '';
+    if(n===current) found = true;
+    h += '<option value="'+esc(n)+'"'+sel+'>'+esc(n)+'</option>';
+  });
+  if(current && !found){
+    h += '<option value="'+esc(current)+'" selected>'+esc(current)+' (リスト外)</option>';
+  }
+  h += '</select>';
+  return h;
+}
+
+function renderHistory(){
+  var m = getMachine();
+  var records = getRecords();
+  var dl = getDateList();
+  var h = '<div style="padding:14px;background:var(--c-bg2);border-radius:var(--r-lg);margin-bottom:14px;font-size:14px;color:var(--c-text2)">'+
+    esc(m.name)+'の履歴。「最新を取得」で他の人の入力を反映、「シートを開く」で生データを直接確認できます。</div>';
+  if(dl.length===0){ h += '<div class="empty">まだ点検記録がありません</div>'; return h; }
+  dl.forEach(function(d){
+    var r = records[d]; var ok=0,ng=0;
+    for(var k in r.results){ if(r.results[k]==='ok')ok++; else if(r.results[k]==='ng')ng++; }
+    h += '<div class="hist-row">';
+    h += '<div><div style="font-size:15px;font-weight:500">'+d+'</div><div style="font-size:13px;color:var(--c-text2);margin-top:2px">点検者: '+esc(r.inspector||'—')+' / 確認者: '+esc(r.checker||'—')+'</div></div>';
+    h += '<div><span class="pill pill-ok">○ '+ok+'</span> &nbsp; <span class="pill pill-ng">× '+ng+'</span></div>';
+    h += '<div style="color:var(--c-text2);font-size:13px">'+(ok+ng)+'/'+getItems().length+' 完了</div>';
+    h += '<div><button class="btn sm" data-opendate="'+d+'">👁 開く</button></div>';
+    h += '</div>';
+  });
+  return h;
+}
+
+function renderItems(){
+  var m = getMachine();
+  var items = getItems();
+  var ed = STATE.editMode;
+  var dis = ed?'':'disabled';
+  var h = '';
+
+  // 点検者・確認者の名簿管理(NID・仕込み共通)
+  h += '<div style="padding:14px;background:var(--c-bg2);border:1px solid var(--c-bd);border-radius:var(--r-lg);margin-bottom:14px">';
+  h += '<div style="font-size:14px;font-weight:500;margin-bottom:10px">👤 点検者・確認者の名簿 '+(ed?'':'<span style="color:var(--c-warn);font-weight:400">(編集モードをONにしてください)</span>')+'</div>';
+  var names = STATE.staffNames || [];
+  if(names.length===0){
+    h += '<div style="font-size:13px;color:var(--c-text2);margin-bottom:10px">まだ名前が登録されていません。下の欄から追加してください。</div>';
+  } else {
+    h += '<div style="display:flex;flex-wrap:wrap;gap:8px;margin-bottom:10px">';
+    names.forEach(function(n){
+      h += '<span style="display:inline-flex;align-items:center;gap:6px;background:var(--c-bg);border:1px solid var(--c-bd);border-radius:999px;padding:6px 6px 6px 14px;font-size:14px">';
+      h += esc(n);
+      h += '<button class="btn sm danger" data-delstaff="'+esc(n)+'" '+dis+' style="width:28px;height:28px;padding:0;border-radius:50%">×</button>';
+      h += '</span>';
+    });
+    h += '</div>';
+  }
+  h += '<div style="display:flex;gap:8px">';
+  h += '<input id="new-staff" placeholder="氏名を入力" '+dis+' style="flex:1;height:44px;padding:0 12px;border:1px solid var(--c-bd2);border-radius:var(--r-md);background:var(--c-bg);color:var(--c-text);font-family:var(--font);font-size:15px;box-sizing:border-box">';
+  h += '<button class="btn sm primary" id="btn-addstaff" '+dis+'>+ 追加</button>';
+  h += '</div>';
+  h += '<div style="font-size:12px;color:var(--c-text2);margin-top:6px">※ここで登録した名前が、点検者・確認者の選択肢になります(NID・仕込み共通)。</div>';
+  h += '</div>';
+
+  h += '<div style="padding:14px;background:var(--c-info-bg);border-radius:var(--r-lg);margin-bottom:14px">';
+  h += '<div style="font-size:14px;font-weight:500;color:var(--c-info);margin-bottom:10px">➕ '+esc(m.name)+'の項目を追加 '+(ed?'':'<span style="color:var(--c-warn);font-weight:400">(編集モードをONにしてください)</span>')+'</div>';
+  h += '<div class="item-mgr item-mgr-add-mobile" style="background:var(--c-bg);grid-template-columns:50px 130px 90px 1fr 40px">';
+  h += '<input id="new-no" placeholder="No." '+dis+' style="text-align:center" inputmode="numeric">';
+  h += '<input id="new-place" placeholder="場所" '+dis+'>';
+  h += '<input id="new-side" placeholder="側(任意)" '+dis+'>';
+  h += '<input id="new-content" placeholder="点検内容" '+dis+'>';
+  h += '<button class="btn sm primary" id="btn-additem" '+dis+' style="width:40px;padding:0">+</button>';
+  h += '</div>';
+  h += '<div style="font-size:12px;color:var(--c-text2);margin-top:6px">※No.を空欄にすると末尾に追加。番号を指定するとその位置に挿入され、以降の番号は自動で繰り下がります(常に1から連番に整理されます)。</div>';
+  h += '</div>';
+  h += '<div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:8px">';
+  h += '<div style="font-size:13px;color:var(--c-text2)">登録済み点検項目 ('+items.length+'件)</div>';
+  h += '<button class="btn sm" id="btn-init" '+dis+'>📥 初期項目を投入</button></div>';
+  items.forEach(function(it){
+    h += '<div class="item-mgr item-mgr-photo">';
+    h += '<div class="item-row-no" style="font-size:14px;font-weight:500;text-align:center">'+it.no+'</div>';
+    if(it.photoId){
+      h += '<img class="item-thumb" src="'+photoUrl(it.photoId,true)+'" data-photo="'+it.photoId+'" alt="見本写真" loading="lazy">';
+    } else {
+      h += '<div class="item-thumb item-thumb-empty">写真なし</div>';
+    }
+    h += '<div class="item-row-place" style="font-size:13px">'+esc(it.place)+'</div>';
+    h += '<div class="item-row-side" style="font-size:12px;color:var(--c-text2)">'+esc(it.side||'—')+'</div>';
+    h += '<div class="item-row-content" style="font-size:14px">'+esc(it.content)+'</div>';
+    h += '<div class="item-actions" style="display:flex;gap:4px">';
+    h += '<button class="btn sm" data-edititem="'+it.id+'" '+dis+' style="width:36px;padding:0">✏</button>';
+    h += '<button class="btn sm danger" data-delitem="'+it.id+'" '+dis+' style="width:36px;padding:0">🗑</button>';
+    h += '</div></div>';
+  });
+  return h;
+}
+
+function renderEditModal(){
+  var existing = document.getElementById('edit-modal');
+  if(existing) existing.remove();
+  var e = STATE.editingItem;
+  var div = document.createElement('div');
+  div.className = 'modal-bg';
+  div.id = 'edit-modal';
+  div.innerHTML = '<div class="modal">'+
+    '<h3 style="margin:0 0 16px;font-size:18px">点検項目を編集</h3>'+
+    '<label>No.</label><input id="edit-no" value="'+esc(e.no)+'" inputmode="numeric">'+
+    '<label>場所</label><input id="edit-place" value="'+esc(e.place)+'">'+
+    '<label>側</label><input id="edit-side" value="'+esc(e.side)+'">'+
+    '<label>内容</label><textarea id="edit-content" style="min-height:80px;resize:vertical">'+esc(e.content)+'</textarea>'+
+    '<label>見本写真</label>'+
+    '<div class="photo-edit">'+
+      (e.photoId
+        ? '<img class="photo-edit-thumb" id="edit-photo-thumb" src="'+photoUrl(e.photoId,true)+'" data-photo="'+e.photoId+'" alt="見本写真">'
+        : '<div class="photo-edit-thumb photo-edit-empty" id="edit-photo-thumb">写真なし</div>')+
+      '<div class="photo-edit-btns">'+
+        '<button class="btn sm primary" id="btn-photo-pick">'+(e.photoId?'📷 写真を変更':'📷 写真を登録')+'</button>'+
+        (e.photoId?'<button class="btn sm danger" id="btn-photo-del">🗑 写真を削除</button>':'')+
+        '<input type="file" id="edit-photo-file" accept="image/*" style="display:none">'+
+      '</div>'+
+    '</div>'+
+    '<div style="display:flex;gap:8px;justify-content:flex-end;margin-top:8px">'+
+    '<button class="btn" id="btn-edit-cancel">キャンセル</button>'+
+    '<button class="btn primary" id="btn-edit-save">💾 保存</button></div></div>';
+  document.body.appendChild(div);
+  div.addEventListener('click', function(ev){ if(ev.target===div){ STATE.editingItem=null; div.remove(); } });
+  el('btn-edit-cancel').onclick = function(){ STATE.editingItem=null; div.remove(); };
+  el('btn-edit-save').onclick = function(){ saveEditItem(); div.remove(); };
+  // 見本写真: 登録・変更
+  var pickBtn = el('btn-photo-pick');
+  var fileInp = el('edit-photo-file');
+  if(pickBtn && fileInp){
+    pickBtn.onclick = function(){ fileInp.click(); };
+    fileInp.onchange = function(){
+      var f = this.files && this.files[0];
+      if(f){ uploadPhoto(e.id, f); }
+    };
+  }
+  // 見本写真: 削除
+  var delBtn = el('btn-photo-del');
+  if(delBtn){ delBtn.onclick = function(){ removePhoto(e.id); }; }
+  // サムネタップで拡大
+  var thumb = el('edit-photo-thumb');
+  if(thumb && e.photoId){ thumb.onclick = function(){ openPhotoModal(e.photoId); }; }
+}
+
+// ============================================================
+// 分析タブ(NG発生ランキング・長期未対応アラート・点検実施率)
+// ============================================================
+function renderAnalysis(){
+  var m = getMachine();
+  var items = getItems();
+  var records = getRecords();
+  var issues = getIssues();
+
+  // 項目別NG発生回数(全期間)
+  var ngCount = {};
+  for(var d in records){
+    var rec = records[d];
+    if(!rec || !rec.results) continue;
+    for(var itemId in rec.results){
+      if(rec.results[itemId]==='ng'){ ngCount[itemId] = (ngCount[itemId]||0) + 1; }
+    }
+  }
+  var ranking = [];
+  items.forEach(function(it){
+    var c = ngCount[it.id] || 0;
+    if(c>0) ranking.push({ no:it.no, place:it.place, side:it.side, content:it.content, count:c });
+  });
+  ranking.sort(function(a,b){ return b.count - a.count; });
+
+  // 長期未対応の不具合(未完了を経過日数の多い順)
+  var openIssues = getIssues().filter(function(is){ return is.status!=='完了'; })
+    .map(function(is){ return { is:is, days:daysSince(is.date) }; })
+    .sort(function(a,b){ return b.days - a.days; });
+
+  // 当月の点検実施率
+  var ym = STATE.printMonth;
+  var daysM = daysInMonth(ym);
+  var doneDays = 0;
+  for(var dd=1; dd<=daysM; dd++){
+    var dk = ym+'-'+pad(dd);
+    var r = records[dk];
+    if(r && r.results && Object.keys(r.results).length>0) doneDays++;
+  }
+  var rate = daysM ? Math.round(doneDays/daysM*100) : 0;
+
+  var h = '';
+  h += '<div style="padding:14px;background:var(--c-bg2);border-radius:var(--r-lg);margin-bottom:14px;font-size:14px;color:var(--c-text2)">';
+  h += '<b>'+esc(m.name)+' 分析</b><br>これまでの点検データから、弱点箇所・対応の遅れ・点検の実施状況を集計します。';
+  h += '</div>';
+
+  // ============================================================
+  // F4 頭出しKPIストリップ(既存集計の要約・新規入力なし)
+  // ============================================================
+  (function(){
+    var openIssues = getIssues().filter(function(is){ return is.status!=='完了'; }).length;
+    var openWatches = getWatches().filter(function(w){ return w.status!=='完了'; }).length;
+    var doneCnt = getDoneIssues().length;
+    var compTotal = doneCnt + openIssues;
+    var compRate = compTotal > 0 ? Math.round(doneCnt / compTotal * 100) : null;
+
+    // 予兆検知率(recall・新規小集計)
+    var rec = computeTriRecall();
+
+    // 再発率: computeRecurrence() を再利用(再計算しない)
+    var recRows = computeRecurrence();
+    var recurItems = 0, occItems = 0;
+    recRows.forEach(function(r){ if(r.occurrences>=1){ occItems++; if(r.recur>=1) recurItems++; } });
+    var recurRate = occItems > 0 ? Math.round(recurItems / occItems * 100) : null;
+
+    // 平均対応日数(任意): 完了済み不具合の 発生日→完了日
+    var doneLeads = [];
+    getDoneIssues().forEach(function(is){
+      if(is.date && is.doneDate){ var d = _abDaysBetween(is.date, is.doneDate); if(d>=0) doneLeads.push(d); }
+    });
+    var avgFix = doneLeads.length ? Math.round(_abAvg(doneLeads)) : null;
+
+    // KPIタイル生成ヘルパ(値・ラベル・補足・色)
+    function tile(label, value, sub, color){
+      var v = '<div style="padding:10px 12px;background:var(--c-bg);border:1px solid var(--c-bd);border-radius:var(--r-md);min-width:128px;flex:1">';
+      v += '<div style="font-size:11px;color:var(--c-text2);margin-bottom:2px">'+label+'</div>';
+      v += '<div style="font-size:22px;font-weight:600;color:'+(color||'var(--c-text)')+'">'+value+'</div>';
+      if(sub) v += '<div style="font-size:10px;color:var(--c-text3);margin-top:2px">'+sub+'</div>';
+      v += '</div>';
+      return v;
+    }
+
+    h += '<div class="analysis-card">';
+    h += '<div class="analysis-title">📊 サマリー（'+esc(m.name)+'）</div>';
+    h += '<div style="display:flex;flex-wrap:wrap;gap:8px">';
+
+    // 未対応×
+    h += tile('未対応の不具合 (×)', openIssues+'件', null, openIssues>0?'var(--c-danger)':'var(--c-text)');
+    // 未対応△
+    h += tile('未対応の経過観察 (△)', openWatches+'件', null, openWatches>0?'var(--c-warn)':'var(--c-text)');
+    // 対応完了率
+    h += tile('対応完了率', compRate==null?'—':compRate+'%', compRate==null?'データなし':('完了'+doneCnt+' / 計'+compTotal),
+              (compRate!=null && compRate>=70)?'var(--c-success)':'var(--c-text)');
+
+    // 予兆検知率(recall) ── 小標本ガード
+    if(rec.recall==null){
+      h += tile('予兆検知率', '—', '×の記録なし', 'var(--c-text3)');
+    } else if(rec.smallSample){
+      h += tile('予兆検知率', rec.recall+'%', '参考(n='+rec.totalIncidents+') 検知'+rec.detected+'/'+rec.totalIncidents, 'var(--c-text2)');
+    } else {
+      h += tile('予兆検知率', rec.recall+'%', '検知'+rec.detected+' / ×'+rec.totalIncidents+'件',
+                rec.recall>=70?'var(--c-success)':rec.recall>=40?'var(--c-warn)':'var(--c-danger)');
+    }
+    // 平均予兆リードタイム
+    h += tile('平均予兆リードタイム', rec.avgLead==null?'—':rec.avgLead+'日',
+              rec.avgLead==null?'予兆検知なし':'△→×の平均', 'var(--c-text)');
+    // 再発率 ── 小標本ガード(対象項目数<5)
+    if(recurRate==null){
+      h += tile('再発率', '—', '不具合なし', 'var(--c-text3)');
+    } else if(occItems < 5){
+      h += tile('再発率', recurRate+'%', '参考(n='+occItems+') 再発'+recurItems+'/'+occItems, 'var(--c-text2)');
+    } else {
+      h += tile('再発率', recurRate+'%', '再発'+recurItems+' / 対象'+occItems+'項目',
+                recurRate>=50?'var(--c-danger)':'var(--c-text)');
+    }
+    // 平均対応日数(任意)
+    h += tile('平均対応日数', avgFix==null?'—':avgFix+'日', avgFix==null?'完了実績なし':'発生→完了', 'var(--c-text)');
+
+    h += '</div>';
+    h += '<div style="font-size:11px;color:var(--c-text3);margin-top:8px">※「予兆検知率」は×(故障)のうち事前に△(予兆)があった割合です。母数が少ない(5件未満)指標は «参考» と表示しています。</div>';
+    h += '</div>';
+  })();
+
+  // 当月実施率カード
+  var rateColor = rate>=90?'var(--c-success)':rate>=60?'var(--c-warn)':'var(--c-danger)';
+  h += '<div class="analysis-card">';
+  h += '<div class="analysis-title">📅 '+esc(ym.split('-')[1])+'月の点検実施率</div>';
+  h += '<div style="display:flex;align-items:center;gap:14px">';
+  h += '<div style="font-size:34px;font-weight:600;color:'+rateColor+'">'+rate+'%</div>';
+  h += '<div style="flex:1">';
+  h += '<div style="font-size:13px;color:var(--c-text2);margin-bottom:4px">'+doneDays+' / '+daysM+' 日 実施</div>';
+  h += '<div class="progress-bar" style="margin:0"><div class="progress-fill" style="width:'+rate+'%;background:'+rateColor+'"></div></div>';
+  h += '</div></div></div>';
+
+  // 長期未対応アラート
+  h += '<div class="analysis-card">';
+  h += '<div class="analysis-title">⏰ 対応が長引いている不具合</div>';
+  if(openIssues.length===0){
+    h += '<div style="font-size:13px;color:var(--c-text2)">未解決の不具合はありません 👍</div>';
+  } else {
+    var topOpen = openIssues.slice(0,5);
+    topOpen.forEach(function(o){
+      var is = o.is;
+      var col = o.days>=30?'var(--c-danger)':o.days>=14?'var(--c-warn)':'var(--c-text2)';
+      h += '<div style="display:flex;align-items:center;gap:10px;padding:8px 0;border-bottom:1px solid var(--c-bd)">';
+      h += '<div style="min-width:64px;font-size:18px;font-weight:600;color:'+col+'">'+o.days+'日</div>';
+      h += '<div style="flex:1;min-width:0"><div style="font-size:12px;color:var(--c-text2)">'+esc(is.place)+(is.side?' / '+esc(is.side):'')+' ・ No.'+esc(is.no)+'</div>';
+      h += '<div style="font-size:14px">'+esc(is.content)+'</div></div>';
+      h += '<div style="font-size:12px;color:var(--c-text3)">'+esc(is.status)+'</div>';
+      h += '</div>';
+    });
+    if(openIssues.length>5){ h += '<div style="font-size:12px;color:var(--c-text3);margin-top:6px">ほか '+(openIssues.length-5)+' 件(不具合リストで確認)</div>'; }
+  }
+  h += '</div>';
+
+  // NG発生ランキング
+  h += '<div class="analysis-card">';
+  h += '<div class="analysis-title">🔧 NGが多い箇所 (発生回数)</div>';
+  if(ranking.length===0){
+    h += '<div style="font-size:13px;color:var(--c-text2)">まだNGの記録がありません。</div>';
+  } else {
+    var maxc = ranking[0].count;
+    ranking.slice(0,10).forEach(function(r){
+      var w = maxc ? Math.round(r.count/maxc*100) : 0;
+      h += '<div style="margin-bottom:10px">';
+      h += '<div style="display:flex;justify-content:space-between;font-size:13px;margin-bottom:3px">';
+      h += '<span style="color:var(--c-text)">No.'+esc(r.no)+' '+esc(r.place)+(r.side?' ('+esc(r.side)+')':'')+'</span>';
+      h += '<span style="font-weight:600;color:var(--c-danger)">'+r.count+'回</span>';
+      h += '</div>';
+      h += '<div style="height:14px;background:var(--c-bg3);border-radius:7px;overflow:hidden"><div style="height:100%;width:'+w+'%;background:var(--c-danger);border-radius:7px"></div></div>';
+      h += '<div style="font-size:11px;color:var(--c-text3);margin-top:2px">'+esc(r.content)+'</div>';
+      h += '</div>';
+    });
+  }
+  h += '</div>';
+
+  // ============================================================
+  // 追加分析① 予兆(△)→故障(×) リードタイム
+  // ============================================================
+  var triRows = computeTriToNg();
+  h += '<div class="analysis-card">';
+  h += '<div class="analysis-title">⚠ 予兆(△)から故障(×)までの日数</div>';
+  if(triRows.length===0){
+    h += '<div style="font-size:13px;color:var(--c-text2)">まだ△→×の事例がありません。△が出た箇所が後日×になると、ここに「予兆から何日で故障したか」が集計されます。</div>';
+  } else {
+    // 転落率の高い順 → リードタイム中央値の短い順
+    triRows.sort(function(a,b){
+      if(b.fallRate !== a.fallRate) return b.fallRate - a.fallRate;
+      var am = a.medLead==null?9999:a.medLead, bm = b.medLead==null?9999:b.medLead;
+      return am - bm;
+    });
+    h += '<div style="font-size:12px;color:var(--c-text2);margin-bottom:8px">△が出てから×に至るまでの日数です。「△が出たら何日以内に手を打つべきか」の目安になります。</div>';
+    triRows.slice(0,10).forEach(function(r){
+      var rateCol = r.fallRate>=70?'var(--c-danger)':r.fallRate>=40?'var(--c-warn)':'var(--c-text2)';
+      h += '<div style="display:flex;align-items:center;gap:10px;padding:8px 0;border-bottom:1px solid var(--c-bd)">';
+      h += '<div style="flex:1;min-width:0"><div style="font-size:12px;color:var(--c-text2)">'+esc(r.place)+(r.side?' / '+esc(r.side):'')+' ・ No.'+esc(r.no)+'</div>';
+      h += '<div style="font-size:14px">'+esc(r.content)+'</div></div>';
+      h += '<div style="text-align:right;min-width:130px">';
+      if(r.medLead!=null){
+        h += '<div style="font-size:13px"><b>中央 '+r.medLead+'日</b> / 最短 '+r.minLead+'日</div>';
+      } else {
+        h += '<div style="font-size:13px;color:var(--c-text3)">×到達なし</div>';
+      }
+      h += '<div style="font-size:12px;color:'+rateCol+';font-weight:500">転落率 '+r.fallRate+'% (△'+r.triCount+'件中'+r.fell+'件)</div>';
+      h += '</div></div>';
+    });
+    var worst = triRows[0];
+    if(worst && worst.medLead!=null){
+      h += '<div style="font-size:12px;color:var(--c-text2);margin-top:8px;padding:8px;background:var(--c-warn-bg);border-radius:var(--r-md)">';
+      h += '💡 最も注意すべきは「'+esc(worst.content)+'」。△が出たら中央 '+worst.medLead+'日(最短 '+worst.minLead+'日)で×に至った実績があります。';
+      h += '</div>';
+    }
+  }
+  h += '</div>';
+
+  // ============================================================
+  // 追加分析② 再発・故障間隔
+  // ============================================================
+  var recRows = computeRecurrence();
+  h += '<div class="analysis-card">';
+  h += '<div class="analysis-title">🔁 繰り返し発生している箇所 (再発)</div>';
+  var recurOnly = recRows.filter(function(r){ return r.recur>=1; });
+  if(recurOnly.length===0){
+    h += '<div style="font-size:13px;color:var(--c-text2)">同じ箇所が繰り返しNGになった事例はまだありません 👍</div>';
+  } else {
+    recurOnly.sort(function(a,b){ return b.recur - a.recur; });
+    h += '<div style="font-size:12px;color:var(--c-text2);margin-bottom:8px">完了をまたいで再びNGになった箇所です。再発が多い・間隔が縮んでいる箇所は、根本対策が必要なサインです。</div>';
+    recurOnly.slice(0,10).forEach(function(r){
+      h += '<div style="display:flex;align-items:center;gap:10px;padding:8px 0;border-bottom:1px solid var(--c-bd)">';
+      h += '<div style="flex:1;min-width:0"><div style="font-size:12px;color:var(--c-text2)">'+esc(r.place)+(r.side?' / '+esc(r.side):'')+' ・ No.'+esc(r.no)+'</div>';
+      h += '<div style="font-size:14px">'+esc(r.content)+'</div></div>';
+      h += '<div style="text-align:right;min-width:120px">';
+      h += '<div style="font-size:13px"><b>再発 '+r.recur+'回</b> (計'+r.occurrences+'回)</div>';
+      if(r.avgGap!=null){
+        h += '<div style="font-size:12px;color:var(--c-text2)">平均間隔 '+r.avgGap+'日';
+        if(r.trend==='accel'){ h += ' <span style="color:var(--c-danger);font-weight:600">⚠加速(劣化)</span>'; }
+        else if(r.trend==='improve'){ h += ' <span style="color:var(--c-success);font-weight:600">改善傾向</span>'; }
+        else if(r.trend==='insufficient'){ h += ' <span style="color:var(--c-text3)">判定にはあと数件必要</span>'; }
+        h += '</div>';
+      }
+      h += '</div></div>';
+    });
+  }
+  h += '</div>';
+
+  // ============================================================
+  // 追加分析③ 4ライン横断ヒートマップ(同一箇所のNG発生率)
+  // ============================================================
+  var matrix = computeCrossLineMatrix();
+  h += '<div class="analysis-card">';
+  h += '<div class="analysis-title">📊 4ライン比較 (同一箇所のNG発生率)</div>';
+  var mids = ['g2','g3','g4','g5'];
+  var midLabel = { g2:'2号', g3:'3号', g4:'4号', g5:'5号' };
+  // 行配列化 + 各号のNG率算出
+  var rows = [];
+  Object.keys(matrix).forEach(function(key){
+    var row = matrix[key];
+    var cells = {}, maxRate = -1, anyData = false;
+    mids.forEach(function(mid){
+      var c = row.cells[mid];
+      if(c && c.chk>0){ var rate = Math.round(c.ng/c.chk*100); cells[mid] = { rate:rate, ng:c.ng, chk:c.chk }; if(rate>maxRate) maxRate=rate; anyData=true; }
+      else { cells[mid] = null; }
+    });
+    if(anyData) rows.push({ label:row.label, content:row.content, side:row.side, cells:cells, maxRate:maxRate });
+  });
+  if(rows.length===0){
+    h += '<div style="font-size:13px;color:var(--c-text2)">比較できるデータがまだありません。各号で点検が記録されると、同じ箇所のNG発生率を号ごとに比較できます。</div>';
+  } else {
+    rows.sort(function(a,b){ return b.maxRate - a.maxRate; });
+    h += '<div style="font-size:12px;color:var(--c-text2);margin-bottom:8px">同じ点検箇所のNG発生率を号ごとに比較します。特定の号だけ高い箇所は、その設備固有の問題の可能性があります。</div>';
+    h += '<div style="overflow-x:auto">';
+    h += '<table style="width:100%;border-collapse:collapse;font-size:12px;min-width:480px">';
+    h += '<thead><tr>';
+    h += '<th style="text-align:left;padding:6px 8px;border-bottom:2px solid var(--c-bd2);position:sticky;left:0;background:var(--c-bg)">箇所</th>';
+    mids.forEach(function(mid){ h += '<th style="padding:6px 8px;border-bottom:2px solid var(--c-bd2);text-align:center;min-width:64px">'+midLabel[mid]+'</th>'; });
+    h += '</tr></thead><tbody>';
+    rows.slice(0,15).forEach(function(r){
+      h += '<tr>';
+      h += '<td style="padding:6px 8px;border-bottom:1px solid var(--c-bd);position:sticky;left:0;background:var(--c-bg)"><div style="font-size:11px;color:var(--c-text2)">'+esc(r.label)+(r.side?' / '+esc(r.side):'')+'</div><div style="font-size:13px">'+esc(r.content)+'</div></td>';
+      mids.forEach(function(mid){
+        var c = r.cells[mid];
+        if(c==null){ h += '<td style="padding:6px 8px;border-bottom:1px solid var(--c-bd);text-align:center;color:var(--c-text3)">—</td>'; }
+        else if(c.chk < 5){
+          // 点検回数が少ないセルは率が不安定 → 色を付けず淡色で数値のみ表示
+          h += '<td style="padding:6px 8px;border-bottom:1px solid var(--c-bd);text-align:center;background:var(--c-bg2);color:var(--c-text3)"><b>'+c.rate+'%</b><div style="font-size:10px;opacity:0.8">'+c.ng+'/'+c.chk+'</div></td>';
+        }
+        else {
+          var bg = heatColor(c.rate);
+          var fg = c.rate>=50 ? '#fff' : 'var(--c-text)';
+          h += '<td style="padding:6px 8px;border-bottom:1px solid var(--c-bd);text-align:center;background:'+bg+';color:'+fg+'"><b>'+c.rate+'%</b><div style="font-size:10px;opacity:0.8">'+c.ng+'/'+c.chk+'</div></td>';
+        }
+      });
+      h += '</tr>';
+    });
+    h += '</tbody></table></div>';
+    h += '<div style="font-size:12px;color:var(--c-text2);margin-top:8px;padding:8px;background:var(--c-bg2);border-radius:var(--r-md)">💡 1つの号だけ赤い箇所は、その設備固有の問題かもしれません。低い号の状態を参考に、点検・対策を他号へ展開できます。</div>';
+    h += '<div style="font-size:11px;color:var(--c-text3);margin-top:6px">※点検回数あたりのNG率です。号ごとの稼働量の差は考慮していません。点検回数が少ないセル(5回未満)は参考値として淡色で表示しています。</div>';
+  }
+  h += '</div>';
+
+  // ============================================================
+  // 追加分析④ ズレ推移(不具合内容の「41→42」等を解析)
+  // ============================================================
+  var deltaRows = computeDeltaTrends();
+  h += '<div class="analysis-card">';
+  h += '<div class="analysis-title">📐 寸法・数値のズレ推移</div>';
+  if(deltaRows.length===0){
+    h += '<div style="font-size:13px;color:var(--c-text2)">不具合内容に「41→42」のように数値を記入すると、同じ箇所のズレの推移をここで追えます。</div>';
+  } else {
+    // 一方向にズレ続けている(累積)箇所を上に
+    deltaRows.sort(function(a,b){
+      if(a.monotonic!==b.monotonic) return a.monotonic?-1:1;
+      return Math.abs(b.totalDrift) - Math.abs(a.totalDrift);
+    });
+    h += '<div style="font-size:12px;color:var(--c-text2);margin-bottom:8px">記入された数値(基準→実測)の推移です。一方向にズレ続けている箇所は、バラツキではなく劣化が進んでいるサインかもしれません。<br>※基準値が途中で変わると累計ズレは目安になります。</div>';
+    deltaRows.slice(0,10).forEach(function(r){
+      h += '<div style="padding:8px 0;border-bottom:1px solid var(--c-bd)">';
+      h += '<div style="display:flex;justify-content:space-between;align-items:flex-start;gap:8px">';
+      h += '<div style="flex:1;min-width:0"><div style="font-size:12px;color:var(--c-text2)">'+esc(r.place)+(r.side?' / '+esc(r.side):'')+' ・ No.'+esc(r.no)+'</div>';
+      h += '<div style="font-size:14px">'+esc(r.content)+'</div></div>';
+      h += '<div style="text-align:right;min-width:120px">';
+      if(r.monotonic){
+        var dcol = r.dir==='増加'?'var(--c-danger)':'var(--c-info)';
+        h += '<div style="font-size:12px;color:'+dcol+';font-weight:600">'+r.dir+'方向に累積</div>';
+      } else {
+        h += '<div style="font-size:12px;color:var(--c-text3)">バラツキ</div>';
+      }
+      h += '<div style="font-size:12px;color:var(--c-text2)">最新 '+r.lastTo+' / 累計 '+(r.totalDrift>0?'+':'')+r.totalDrift+'</div>';
+      h += '</div></div>';
+      // 推移の数値列(最大8件)
+      var seq = r.points.slice(-8).map(function(p){ return (p.date?p.date.slice(5):'')+' '+p.to; }).join('  →  ');
+      h += '<div style="font-size:11px;color:var(--c-text3);margin-top:4px">'+esc(seq)+'</div>';
+      h += '</div>';
+    });
+    var topD = deltaRows[0];
+    if(topD && topD.monotonic){
+      h += '<div style="font-size:12px;color:var(--c-text2);margin-top:8px;padding:8px;background:var(--c-warn-bg);border-radius:var(--r-md)">';
+      h += '💡 「'+esc(topD.content)+'」は'+topD.dir+'方向に'+(topD.totalDrift>0?'+':'')+topD.totalDrift+'ズレが累積しています。公差に近づく前に点検・調整を検討してください。';
+      h += '</div>';
+    }
+  }
+  h += '</div>';
+
+  // ============================================================
+  // 追加分析⑤ 不良回数の推移(「NG7回」等を解析。停止ログの代理指標)
+  // ============================================================
+  var countRows = computeCountTrends();
+  h += '<div class="analysis-card">';
+  h += '<div class="analysis-title">📈 不良回数の推移</div>';
+  if(countRows.length===0){
+    h += '<div style="font-size:13px;color:var(--c-text2)">不具合内容に「NG7回」のように回数を記入すると、箇所ごとの不良発生数をここで追えます。</div>';
+  } else {
+    countRows.sort(function(a,b){ return b.total - a.total; });
+    h += '<div style="font-size:12px;color:var(--c-text2);margin-bottom:8px">記入された不良回数の集計です。発生数が多い・増えている箇所は、設備の不安定さを示します。</div>';
+    countRows.slice(0,10).forEach(function(r){
+      h += '<div style="padding:8px 0;border-bottom:1px solid var(--c-bd)">';
+      h += '<div style="display:flex;justify-content:space-between;align-items:flex-start;gap:8px">';
+      h += '<div style="flex:1;min-width:0"><div style="font-size:12px;color:var(--c-text2)">'+esc(r.place)+(r.side?' / '+esc(r.side):'')+' ・ No.'+esc(r.no)+'</div>';
+      h += '<div style="font-size:14px">'+esc(r.content)+'</div></div>';
+      h += '<div style="text-align:right;min-width:110px">';
+      h += '<div style="font-size:13px;color:var(--c-danger);font-weight:600">計 '+r.total+'回</div>';
+      h += '<div style="font-size:12px;color:var(--c-text2)">最多 '+r.max+'回'+(r.increasing?' <span style="color:var(--c-danger);font-weight:600">⚠増加</span>':'')+'</div>';
+      h += '</div></div>';
+      var seq2 = r.points.slice(-8).map(function(p){ return (p.date?p.date.slice(5):'')+(p.time?' '+p.time:'')+':'+p.count+'回'; }).join('  /  ');
+      h += '<div style="font-size:11px;color:var(--c-text3);margin-top:4px">'+esc(seq2)+'</div>';
+      h += '</div>';
+    });
+  }
+  h += '</div>';
+
+  return h;
+}
+
+// ============================================================
+// 分析の集計関数(予知保全) ── クライアント側集計のみ・GAS不要
+// ============================================================
+// 日数差・中央値・平均・日付正規化(命名を一意にして衝突回避)
+function _abDaysBetween(a, b){
+  return Math.round((new Date(b+'T00:00:00') - new Date(a+'T00:00:00')) / 86400000);
+}
+function _abMedian(arr){
+  if(!arr.length) return null;
+  var a = arr.slice().sort(function(x,y){ return x-y; });
+  var m = Math.floor(a.length/2);
+  return a.length%2 ? a[m] : Math.round((a[m-1]+a[m])/2);
+}
+function _abAvg(arr){ if(!arr.length) return null; var s=0; for(var i=0;i<arr.length;i++) s+=arr[i]; return s/arr.length; }
+function _abUniqueSortedDates(ds){
+  var seen = {}, out = [];
+  ds.forEach(function(d){ if(d && !seen[d]){ seen[d]=1; out.push(d); } });
+  out.sort();
+  return out;
+}
+
+// 故障日列のトレンド検定(条件付きLaplace検定)。
+// 初回故障と最終故障を区間[0,T]の両端とみなし、内部点の一様性(=一定率/HPP)を検定。
+// U>0: 後ろに偏る=故障率増加(劣化加速) / U<0: 改善 / |U|大: 有意
+function _abLaplaceU(sortedDates){
+  var m = sortedDates.length;
+  if(m < 4) return null;                       // 内部点2件未満は判定不可
+  var T = _abDaysBetween(sortedDates[0], sortedDates[m - 1]);
+  if(T <= 0) return null;                       // 区間0は判定不可
+  var nIn = m - 2;
+  var sum = 0;
+  for(var i = 1; i < m - 1; i++) sum += _abDaysBetween(sortedDates[0], sortedDates[i]);
+  return (sum - nIn * T / 2) / (T * Math.sqrt(nIn / 12));
+}
+
+// ① △→× リードタイム・転落率(現在の設備)
+// 【データソース】△=経過観察(watch)の発生日 / ×=記録(records)の'ng'日
+//   ※記録シートには△が保存されないため、△は必ず watch から取得する。
+function computeTriToNg(){
+  var items = getItems();
+
+  // 項目ID -> △発生日[](昇順・重複排除)  ※watch = △エピソード
+  var triByItem = {};
+  getWatches().concat(getWatchDone()).forEach(function(w){
+    if(!w.itemId || !w.date) return;
+    (triByItem[w.itemId] = triByItem[w.itemId] || []).push(w.date);
+  });
+
+  // 項目ID -> ×発生日[](昇順・重複排除)  ※records の 'ng' 日
+  var ngByItem = {};
+  var records = getRecords();
+  Object.keys(records).forEach(function(date){
+    var r = records[date]; if(!r || !r.results) return;
+    for(var id in r.results){
+      if(r.results[id] === 'ng'){ (ngByItem[id] = ngByItem[id] || []).push(date); }
+    }
+  });
+
+  var rows = [];
+  items.forEach(function(it){
+    var tris = _abUniqueSortedDates(triByItem[it.id] || []);
+    if(tris.length === 0) return;                  // △が無い項目は対象外
+    var ngs  = _abUniqueSortedDates(ngByItem[it.id] || []);
+
+    var fell = 0, leads = [];
+    for(var i = 0; i < tris.length; i++){
+      var start = tris[i];
+      var end   = (i + 1 < tris.length) ? tris[i + 1] : null; // 次の△エピソード開始
+      // [start, end) の範囲で最初の×(同日含む、次△の前まで)
+      var hit = null;
+      for(var j = 0; j < ngs.length; j++){
+        var afterStart = _abDaysBetween(start, ngs[j]) >= 0;          // ng >= start
+        var beforeNext = (end === null) || (_abDaysBetween(ngs[j], end) > 0); // ng < end
+        if(afterStart && beforeNext){ hit = ngs[j]; break; }
+      }
+      if(hit){ fell++; leads.push(_abDaysBetween(start, hit)); }
+    }
+
+    rows.push({
+      no: it.no, place: it.place, side: it.side, content: it.content,
+      triCount: tris.length,
+      fell: fell,
+      fallRate: Math.round(fell / tris.length * 100),
+      medLead: leads.length ? _abMedian(leads) : null,
+      minLead: leads.length ? Math.min.apply(null, leads) : null
+    });
+  });
+  return rows;
+}
+
+// 予兆検知率(recall)の集計 ── F4 KPIストリップ用の新規小集計
+// 【観点】computeTriToNg が「△の転落率(precision)」を出すのに対し、
+//        こちらは「×のうち事前に△があった割合(recall)」を出す(別物)。
+// 【データソース】△=経過観察(watch)の発生日 / ×=記録(records)の'ng'日(computeTriToNgと同じ)
+// 【×インシデント】同一項目で連続日(既定1日以内)の×は1件にまとめる。
+// 【予兆あり】同項目で「×発生日以前 かつ 窓(既定90日)以内」に△があれば予兆あり。
+function computeTriRecall(){
+  var WINDOW_DAYS = 90;   // △を予兆とみなす遡及窓
+  var GAP_DAYS = 1;       // この日数以内に連続する×は同一インシデントに集約
+  var MIN_N = 5;          // 小標本ガードのしきい値(母数<5は参考値)
+
+  // △発生日: 項目ID -> [日付昇順]
+  var triByItem = {};
+  getWatches().concat(getWatchDone()).forEach(function(w){
+    if(!w.itemId || !w.date) return;
+    (triByItem[w.itemId] = triByItem[w.itemId] || []).push(w.date);
+  });
+  Object.keys(triByItem).forEach(function(k){ triByItem[k] = _abUniqueSortedDates(triByItem[k]); });
+
+  // ×発生日: 項目ID -> [日付昇順]
+  var ngByItem = {};
+  var records = getRecords();
+  Object.keys(records).forEach(function(date){
+    var r = records[date]; if(!r || !r.results) return;
+    for(var id in r.results){
+      if(r.results[id] === 'ng'){ (ngByItem[id] = ngByItem[id] || []).push(date); }
+    }
+  });
+
+  var totalIncidents = 0, detected = 0, leads = [];
+  Object.keys(ngByItem).forEach(function(id){
+    var ngs = _abUniqueSortedDates(ngByItem[id]);
+    var tris = triByItem[id] || [];
+    // 連続日の×を1インシデントに集約 → 各インシデントの起点日(最初の×)を採用
+    var incidentStarts = [];
+    for(var i = 0; i < ngs.length; i++){
+      if(i === 0 || _abDaysBetween(ngs[i-1], ngs[i]) > GAP_DAYS){
+        incidentStarts.push(ngs[i]);
+      }
+    }
+    incidentStarts.forEach(function(start){
+      totalIncidents++;
+      // start 以前・窓以内の△を探す(最も近い△でリードタイム算出)
+      var best = null;
+      for(var j = 0; j < tris.length; j++){
+        var back = _abDaysBetween(tris[j], start); // start - tri (>=0で過去)
+        if(back >= 0 && back <= WINDOW_DAYS){
+          if(best === null || back < best) best = back;
+        }
+      }
+      if(best !== null){ detected++; leads.push(best); }
+    });
+  });
+
+  return {
+    totalIncidents: totalIncidents,
+    detected: detected,
+    recall: totalIncidents > 0 ? Math.round(detected / totalIncidents * 100) : null,
+    avgLead: leads.length ? Math.round(_abAvg(leads)) : null,
+    smallSample: (totalIncidents < MIN_N),
+    minN: MIN_N
+  };
+}
+
+// ② 再発・故障間隔(現在の設備, 完了済み不具合も含む)
+function computeRecurrence(){
+  var all = getIssues().concat(getDoneIssues());
+  var byItem = {};
+  all.forEach(function(is){
+    var k = is.itemId || ('__'+is.id);
+    (byItem[k]=byItem[k]||[]).push(is.date);
+  });
+  var rows = [];
+  Object.keys(byItem).forEach(function(k){
+    var ds = _abUniqueSortedDates(byItem[k]);
+    if(ds.length<1) return;
+    var gaps = [];
+    for(var i=1;i<ds.length;i++) gaps.push(_abDaysBetween(ds[i-1], ds[i]));
+    var any = null;
+    for(var x=0;x<all.length;x++){ if((all[x].itemId||('__'+all[x].id))===k){ any=all[x]; break; } }
+    any = any || {};
+    var avgGap = gaps.length ? Math.round(_abAvg(gaps)) : null;
+    var lastGap = gaps.length ? gaps[gaps.length-1] : null;
+    var U = _abLaplaceU(ds);
+    var trend = 'none';
+    if(U === null)        trend = 'insufficient';
+    else if(U >= 1.645)   trend = 'accel';     // 劣化加速(5%片側、閾値は調整可)
+    else if(U <= -1.645)  trend = 'improve';
+
+    rows.push({ no:any.no, place:any.place, side:any.side, content:any.content,
+      occurrences: ds.length, recur: ds.length-1,
+      avgGap: avgGap, lastGap: lastGap,
+      laplaceU: (U !== null ? Math.round(U*100)/100 : null),
+      trend: trend });
+  });
+  return rows;
+}
+
+// ③ 4ライン横断: place+content をキーに号別のng/tri/点検回数を集計
+function computeCrossLineMatrix(){
+  var mids = ['g2','g3','g4','g5'];
+  var matrix = {};
+  mids.forEach(function(mid){
+    var recs = STATE.allRecords[mid] || {};
+    var items = STATE.allItems[mid] || [];
+    var meta = {}; items.forEach(function(it){ meta[it.id] = it; });
+    var agg = {};
+    for(var d in recs){
+      var r = recs[d]; if(!r || !r.results) continue;
+      for(var id in r.results){
+        var v = r.results[id];
+        var a = agg[id] = agg[id] || { ng:0, tri:0, chk:0 };
+        a.chk++;
+        // ※記録(records)には△が保存されないため tri は常に0(ここでは集計しない)。
+        //   △率が必要なら①同様 watch から算出する別実装が要る(本改修の範囲外)。
+        if(v==='ng') a.ng++; else if(v==='tri') a.tri++;
+      }
+    }
+    for(var id2 in agg){
+      var it = meta[id2]; if(!it) continue;
+      var key = (it.place||'').trim() + '┃' + (it.content||'').trim();
+      var row = matrix[key] = matrix[key] || { label:it.place, content:it.content, side:it.side, cells:{} };
+      row.cells[mid] = agg[id2];
+    }
+  });
+  return matrix;
+}
+
+// ヒートマップのセル背景色(NG率0%→白, 高→赤)
+function heatColor(rate){
+  if(rate<=0) return 'var(--c-bg)';
+  if(rate<10) return '#fde8e8';
+  if(rate<25) return '#f9c9c9';
+  if(rate<50) return '#f29a9a';
+  if(rate<75) return '#e96a6a';
+  return '#d83b3b';
+}
+
+// ============================================================
+// 不具合内容テキストからの数値自動抽出(A案: 現場の自由文をそのまま解析)
+// ============================================================
+// 例) "41→42"  "119.0 → 119.6"  "41-42"  → ズレ型 {kind:'delta', from, to, diff}
+//     "NG7回"  "10:30時点で化粧箱-NG7回"  "7回" → カウント型 {kind:'count', count, time}
+// 取れなければ null
+function parseDefectNumbers(text){
+  if(!text) return null;
+  var s = String(text);
+  // --- ズレ型: A→B / A-B / A〜B (小数可、矢印/ハイフン/波/空白を許容) ---
+  // 全角矢印・半角矢印・→・⇒・- などを区切りに
+  // 区切りは矢印と波ダッシュのみ(ハイフン/マイナス単独は区切りにしない → 「No.41-42」等の誤抽出を防ぐ)
+  var mDelta = s.match(/(-?\d+(?:\.\d+)?)\s*(?:→|⇒|->|=>|〜|～|~)\s*(-?\d+(?:\.\d+)?)/);
+  if(mDelta){
+    var from = parseFloat(mDelta[1]);
+    var to   = parseFloat(mDelta[2]);
+    if(!isNaN(from) && !isNaN(to)){
+      return { kind:'delta', from:from, to:to, diff:Math.round((to-from)*1000)/1000 };
+    }
+  }
+  // --- カウント型: 数字+回 / NG数字 ---
+  var time = null;
+  var mTime = s.match(/(\d{1,2}):(\d{2})/);
+  if(mTime){ time = mTime[1].padStart(2,'0')+':'+mTime[2]; }
+  var mCount = s.match(/(\d+)\s*回/);          // 「7回」
+  if(!mCount) mCount = s.match(/NG\s*(\d+)/i);   // 「NG7」
+  if(mCount){
+    var c = parseInt(mCount[1],10);
+    if(!isNaN(c)) return { kind:'count', count:c, time:time };
+  }
+  return null;
+}
+
+// 抽出結果を短いバッジ文字列にする(カード表示用)
+function defectNumBadge(parsed){
+  if(!parsed) return '';
+  if(parsed.kind==='delta'){
+    var sign = parsed.diff>0 ? '+' : '';
+    var col = parsed.diff===0 ? 'var(--c-text2)' : 'var(--c-warn)';
+    return '<span style="display:inline-block;margin-left:8px;padding:2px 8px;border-radius:var(--r-md);background:var(--c-warn-bg);color:'+col+';font-size:12px;font-weight:600">基準 '+parsed.from+' → 実測 '+parsed.to+' ('+sign+parsed.diff+')</span>';
+  }
+  if(parsed.kind==='count'){
+    return '<span style="display:inline-block;margin-left:8px;padding:2px 8px;border-radius:var(--r-md);background:var(--c-danger-bg);color:var(--c-danger);font-size:12px;font-weight:600">'+(parsed.time?parsed.time+' ':'')+parsed.count+'回</span>';
+  }
+  return '';
+}
+
+// ④ ズレ推移分析: 同一項目のズレ(delta)を発生日順に並べ、累積劣化かを見る(現設備)
+//    不具合・経過観察の両方の detail を解析対象にする
+function computeDeltaTrends(){
+  var list = getIssues().concat(getDoneIssues()).concat(getWatches()).concat(getWatchDone());
+  var byItem = {};
+  list.forEach(function(r){
+    var pr = parseDefectNumbers(r.detail);
+    if(!pr || pr.kind!=='delta') return;
+    var k = r.itemId || ('__'+r.id);
+    (byItem[k]=byItem[k]||{ no:r.no, place:r.place, side:r.side, content:r.content, points:[] });
+    byItem[k].points.push({ date:r.date, from:pr.from, to:pr.to, diff:pr.diff });
+  });
+  var rows = [];
+  Object.keys(byItem).forEach(function(k){
+    var o = byItem[k];
+    // 日付昇順、同日は1件目を採用
+    o.points.sort(function(a,b){ return (a.date||'').localeCompare(b.date||''); });
+    if(o.points.length===0) return;
+    var diffs = o.points.map(function(p){ return p.diff; });
+    // 一方向性: 全てが同符号(>0 or <0)で2点以上なら「累積」
+    var allPos = diffs.every(function(d){ return d>0; });
+    var allNeg = diffs.every(function(d){ return d<0; });
+    var monotonic = (o.points.length>=3 && (allPos||allNeg));
+    // 最新の実測値・累計ズレ
+    var last = o.points[o.points.length-1];
+    rows.push({
+      no:o.no, place:o.place, side:o.side, content:o.content,
+      count:o.points.length,
+      lastTo:last.to, lastDiff:last.diff,
+      totalDrift: Math.round((last.to - o.points[0].from)*1000)/1000,
+      monotonic:monotonic, dir:(allPos?'増加':allNeg?'減少':'混在'),
+      points:o.points
+    });
+  });
+  return rows;
+}
+
+// ⑤ カウント時系列分析: count型を項目別・日別に集計(現設備)
+function computeCountTrends(){
+  var list = getIssues().concat(getDoneIssues()).concat(getWatches()).concat(getWatchDone());
+  var byItem = {};
+  list.forEach(function(r){
+    var pr = parseDefectNumbers(r.detail);
+    if(!pr || pr.kind!=='count') return;
+    var k = r.itemId || ('__'+r.id);
+    (byItem[k]=byItem[k]||{ no:r.no, place:r.place, side:r.side, content:r.content, points:[] });
+    byItem[k].points.push({ date:r.date, count:pr.count, time:pr.time });
+  });
+  var rows = [];
+  Object.keys(byItem).forEach(function(k){
+    var o = byItem[k];
+    o.points.sort(function(a,b){ return (a.date||'').localeCompare(b.date||''); });
+    if(o.points.length===0) return;
+    var counts = o.points.map(function(p){ return p.count; });
+    var total = counts.reduce(function(s,x){ return s+x; }, 0);
+    var maxc = Math.max.apply(null, counts);
+    // 増加傾向: 直近が平均より多い
+    var avg = total / counts.length;
+    var last = o.points[o.points.length-1];
+    rows.push({
+      no:o.no, place:o.place, side:o.side, content:o.content,
+      days:o.points.length, total:total, max:maxc,
+      lastCount:last.count, lastDate:last.date,
+      increasing:(o.points.length>=3 && last.count > avg),
+      points:o.points
+    });
+  });
+  return rows;
+}
+
+function renderMonthly(){
+  var m = getMachine();
+  var items = getItems();
+  var records = getRecords();
+  var days = daysInMonth(STATE.printMonth);
+  var pm = STATE.printMonth.split('-')[1];
+  var xlsxOk = (typeof XLSX !== 'undefined');
+  var h = '<div class="print-config no-print">';
+  h += '<h3 style="margin:0 0 12px;color:var(--c-info)">📅 月次まとめ出力</h3>';
+  h += '<p style="margin:0 0 14px;font-size:14px;color:var(--c-text2)">印刷: <b>'+esc(m.name)+' → '+m.paperSize+'サイズ横向き</b>。点検表の下に<b>未解決の不具合一覧</b>(繰り越し含む)も印刷されます。</p>';
+  h += '<div style="display:flex;gap:12px;align-items:flex-end;flex-wrap:wrap">';
+  h += '<div class="field"><label style="font-size:13px;color:var(--c-text2);margin-bottom:4px;display:block">対象月</label>';
+  h += '<input type="month" id="inp-month" value="'+STATE.printMonth+'" style="height:44px;padding:0 12px;font-size:15px;border:1px solid var(--c-bd2);border-radius:var(--r-md)"></div>';
+  h += '<button class="btn primary" id="btn-print">🖨 印刷 ('+m.paperSize+'横)</button>';
+  if(xlsxOk) h += '<button class="btn success" id="btn-excel">📊 Excel(.xlsx)に変換</button>';
+  h += '</div>';
+  if(!xlsxOk) h += '<p style="font-size:12px;color:var(--c-text2);margin-top:10px">※Excel変換は現環境では利用不可。印刷後にPDF保存、またはスプレッドシートから直接Excel出力をご利用ください。</p>';
+  h += '</div>';
+
+  h += '<div style="padding:14px;background:var(--c-bg2);border-radius:var(--r-lg)">';
+  h += '<h3 style="margin:0 0 12px;font-size:15px">'+pm+'月のプレビュー</h3>';
+  h += '<div style="overflow-x:auto;background:#fff;padding:10px;border-radius:var(--r-md)">';
+  h += monthTableHTML(items, records, days, false);
+  h += '</div></div>';
+  return h;
+}
+
+function monthTableHTML(items, records, days, forPrint){
+  var h = '<table'+(forPrint?' class="month-table"':' style="width:100%;border-collapse:collapse;font-size:9px;color:#000"')+'>';
+  h += '<thead><tr'+(forPrint?'':' style="background:#d0d0d0"')+'>';
+  var th = forPrint ? '' : ' style="border:1px solid #333;padding:2px;text-align:center"';
+  h += '<th'+th+'>No.</th><th'+th+'>場所</th><th'+th+'>側</th><th'+th+(forPrint?'':' style="border:1px solid #333;padding:2px;min-width:200px"')+'>点検内容</th>';
+  for(var d=1;d<=days;d++) h += '<th'+(forPrint?' class="day-col"':' style="border:1px solid #333;padding:2px;width:20px;text-align:center"')+'>'+d+'</th>';
+  if(forPrint) h += '<th style="width:90pt">備考</th>';
+  h += '</tr></thead><tbody>';
+  var td = forPrint ? '' : ' style="border:1px solid #333;padding:2px"';
+  items.forEach(function(it){
+    var notes = [];
+    h += '<tr>';
+    h += '<td'+(forPrint?' style="text-align:center"':' style="border:1px solid #333;padding:2px;text-align:center"')+'>'+it.no+'</td>';
+    h += '<td'+td+'>'+esc(it.place)+'</td>';
+    h += '<td'+(forPrint?' style="font-size:6pt"':' style="border:1px solid #333;padding:2px;font-size:8px"')+'>'+esc(it.side)+'</td>';
+    h += '<td'+(forPrint?' style="font-size:7pt"':' style="border:1px solid #333;padding:2px;font-size:8px"')+'>'+esc(it.content)+'</td>';
+    for(var d=1;d<=days;d++){
+      var dk = STATE.printMonth+'-'+pad(d);
+      var rec = records[dk];
+      var v = rec&&rec.results ? rec.results[it.id] : null;
+      var note = rec&&rec.notes ? rec.notes[it.id] : null;
+      if(note&&(v==='ng'||v==='tri')) notes.push(d+'日:'+note);
+      if(forPrint){
+        h += '<td class="'+(v==='ok'?'ok-cell':v==='ng'?'ng-cell':v==='tri'?'tri-cell':'')+'">'+(v==='ok'?'○':v==='ng'?'×':v==='tri'?'△':'')+'</td>';
+      } else {
+        var col = v==='ok'?'#060':v==='ng'?'#c00':v==='tri'?'#946000':'#000';
+        var bg = v==='ng'?'#ffe8e8':v==='tri'?'#fff3df':'#fff';
+        h += '<td style="border:1px solid #333;padding:2px;text-align:center;font-weight:bold;font-size:11px;color:'+col+';background:'+bg+'">'+(v==='ok'?'○':v==='ng'?'×':v==='tri'?'△':'')+'</td>';
+      }
+    }
+    if(forPrint) h += '<td style="font-size:6pt">'+esc(notes.join(' / '))+'</td>';
+    h += '</tr>';
+  });
+  // 点検者・確認者行(印刷時のみ)
+  if(forPrint){
+    ['点検者','確認者'].forEach(function(label,idx){
+      h += '<tr><td colspan="4" style="font-weight:bold;text-align:center;padding:0 6px">'+label+'</td>';
+      for(var d=1;d<=days;d++){
+        var dk = STATE.printMonth+'-'+pad(d);
+        var rec = records[dk];
+        var name = rec ? (idx===0?rec.inspector:rec.checker) : '';
+        h += '<td style="font-size:6pt;text-align:center">'+esc(name?name.slice(0,3):'')+'</td>';
+      }
+      h += '<td></td></tr>';
+    });
+  }
+  h += '</tbody></table>';
+  return h;
+}
+
+function buildPrintArea(){
+  var m = getMachine();
+  var items = getItems();
+  var records = getRecords();
+  var days = daysInMonth(STATE.printMonth);
+  var pm = STATE.printMonth.split('-')[1];
+  var h = '<div style="padding:4mm;color:#000;font-family:sans-serif">';
+  h += '<div style="display:flex;justify-content:space-between;align-items:baseline;margin-bottom:4px;border-bottom:2px solid #000;padding-bottom:3px">';
+  h += '<h1 style="margin:0;font-size:14pt">'+esc(pm)+'月度 '+esc(m.name)+esc(m.subtitle)+'</h1>';
+  h += '<div style="font-size:9pt">対象: '+STATE.printMonth+'</div></div>';
+  h += '<div style="font-size:8pt;margin-bottom:4px">※記入方法: 確認をし異常なければ○、異常があれば×に備考に詳細記入。</div>';
+  h += monthTableHTML(items, records, days, true);
+
+  // 未完了の不具合一覧(過去月からの繰り越し含む)
+  var openIssues = getIssues().filter(function(is){ return is.status!=='完了'; })
+    .sort(function(a,b){ return a.date.localeCompare(b.date); });
+  h += '<div style="margin-top:10px;page-break-inside:auto">';
+  h += '<div style="font-size:11pt;font-weight:bold;border-bottom:1.5px solid #000;padding-bottom:2px;margin-bottom:4px">未解決の不具合一覧 ('+openIssues.length+'件) ※前月からの繰り越し含む</div>';
+  if(openIssues.length===0){
+    h += '<div style="font-size:9pt">未解決の不具合はありません。</div>';
+  } else {
+    h += '<table style="width:100%;border-collapse:collapse;font-size:8pt;color:#000">';
+    h += '<thead><tr style="background:#f4cccc">';
+    h += '<th style="border:1px solid #333;padding:2px;width:42pt">発生月</th>';
+    h += '<th style="border:1px solid #333;padding:2px;width:26pt">No.</th>';
+    h += '<th style="border:1px solid #333;padding:2px;width:55pt">場所</th>';
+    h += '<th style="border:1px solid #333;padding:2px">点検内容</th>';
+    h += '<th style="border:1px solid #333;padding:2px">不具合内容</th>';
+    h += '<th style="border:1px solid #333;padding:2px">対応コメント</th>';
+    h += '<th style="border:1px solid #333;padding:2px;width:40pt">担当</th>';
+    h += '<th style="border:1px solid #333;padding:2px;width:36pt">状況</th>';
+    h += '</tr></thead><tbody>';
+    openIssues.forEach(function(is){
+      var mlabel = is.date ? (is.date.split('-')[0]+'/'+is.date.split('-')[1]) : '';
+      h += '<tr>';
+      h += '<td style="border:1px solid #333;padding:2px;text-align:center">'+esc(mlabel)+'</td>';
+      h += '<td style="border:1px solid #333;padding:2px;text-align:center">'+esc(is.no!=null?is.no:'')+'</td>';
+      h += '<td style="border:1px solid #333;padding:2px;font-size:7pt">'+esc(is.place)+(is.side?' '+esc(is.side):'')+'</td>';
+      h += '<td style="border:1px solid #333;padding:2px;font-size:7pt">'+esc(is.content)+'</td>';
+      h += '<td style="border:1px solid #333;padding:2px;font-size:7pt">'+esc(is.detail||'')+'</td>';
+      h += '<td style="border:1px solid #333;padding:2px;font-size:7pt">'+esc(is.comment||'')+'</td>';
+      h += '<td style="border:1px solid #333;padding:2px;text-align:center;font-size:7pt">'+esc(is.assignee||'')+'</td>';
+      h += '<td style="border:1px solid #333;padding:2px;text-align:center;font-size:7pt">'+esc(is.status)+'</td>';
+      h += '</tr>';
+    });
+    h += '</tbody></table>';
+  }
+  h += '</div>';
+
+  // 完了した不具合一覧
+  var doneIssues = getDoneIssues().slice()
+    .sort(function(a,b){ return (b.doneDate||'').localeCompare(a.doneDate||''); });
+  h += '<div style="margin-top:10px;page-break-inside:auto">';
+  h += '<div style="font-size:11pt;font-weight:bold;border-bottom:1.5px solid #000;padding-bottom:2px;margin-bottom:4px">完了した不具合一覧 ('+doneIssues.length+'件)</div>';
+  if(doneIssues.length===0){
+    h += '<div style="font-size:9pt">完了した不具合はありません。</div>';
+  } else {
+    h += '<table style="width:100%;border-collapse:collapse;font-size:8pt;color:#000">';
+    h += '<thead><tr style="background:#d9ead3">';
+    h += '<th style="border:1px solid #333;padding:2px;width:42pt">発生月</th>';
+    h += '<th style="border:1px solid #333;padding:2px;width:26pt">No.</th>';
+    h += '<th style="border:1px solid #333;padding:2px;width:36pt">完了日</th>';
+    h += '<th style="border:1px solid #333;padding:2px;width:55pt">場所</th>';
+    h += '<th style="border:1px solid #333;padding:2px">点検内容</th>';
+    h += '<th style="border:1px solid #333;padding:2px">不具合内容</th>';
+    h += '<th style="border:1px solid #333;padding:2px">対応コメント</th>';
+    h += '<th style="border:1px solid #333;padding:2px;width:40pt">担当</th>';
+    h += '</tr></thead><tbody>';
+    doneIssues.forEach(function(is){
+      var mlabel = is.date ? (is.date.split('-')[0]+'/'+is.date.split('-')[1]) : '';
+      h += '<tr>';
+      h += '<td style="border:1px solid #333;padding:2px;text-align:center">'+esc(mlabel)+'</td>';
+      h += '<td style="border:1px solid #333;padding:2px;text-align:center">'+esc(is.no!=null?is.no:'')+'</td>';
+      h += '<td style="border:1px solid #333;padding:2px;text-align:center;font-size:7pt">'+esc(is.doneDate||'')+'</td>';
+      h += '<td style="border:1px solid #333;padding:2px;font-size:7pt">'+esc(is.place)+(is.side?' '+esc(is.side):'')+'</td>';
+      h += '<td style="border:1px solid #333;padding:2px;font-size:7pt">'+esc(is.content)+'</td>';
+      h += '<td style="border:1px solid #333;padding:2px;font-size:7pt">'+esc(is.detail||'')+'</td>';
+      h += '<td style="border:1px solid #333;padding:2px;font-size:7pt">'+esc(is.comment||'')+'</td>';
+      h += '<td style="border:1px solid #333;padding:2px;text-align:center;font-size:7pt">'+esc(is.assignee||'')+'</td>';
+      h += '</tr>';
+    });
+    h += '</tbody></table>';
+  }
+  h += '</div>';
+
+  // 経過観察中の一覧(過去月からの繰り越し含む)
+  var openWatches = getWatches().filter(function(w){ return w.status!=='完了'; })
+    .sort(function(a,b){ return a.date.localeCompare(b.date); });
+  h += '<div style="margin-top:10px;page-break-inside:auto">';
+  h += '<div style="font-size:11pt;font-weight:bold;border-bottom:1.5px solid #000;padding-bottom:2px;margin-bottom:4px">経過観察中の一覧 ('+openWatches.length+'件) ※前月からの繰り越し含む</div>';
+  if(openWatches.length===0){
+    h += '<div style="font-size:9pt">経過観察中の項目はありません。</div>';
+  } else {
+    h += '<table style="width:100%;border-collapse:collapse;font-size:8pt;color:#000">';
+    h += '<thead><tr style="background:#fff3df">';
+    h += '<th style="border:1px solid #333;padding:2px;width:42pt">発生月</th>';
+    h += '<th style="border:1px solid #333;padding:2px;width:26pt">No.</th>';
+    h += '<th style="border:1px solid #333;padding:2px;width:55pt">場所</th>';
+    h += '<th style="border:1px solid #333;padding:2px">点検内容</th>';
+    h += '<th style="border:1px solid #333;padding:2px">観察内容</th>';
+    h += '<th style="border:1px solid #333;padding:2px">対応コメント</th>';
+    h += '<th style="border:1px solid #333;padding:2px;width:40pt">担当</th>';
+    h += '<th style="border:1px solid #333;padding:2px;width:36pt">状況</th>';
+    h += '</tr></thead><tbody>';
+    openWatches.forEach(function(w){
+      var mlabel = w.date ? (w.date.split('-')[0]+'/'+w.date.split('-')[1]) : '';
+      h += '<tr>';
+      h += '<td style="border:1px solid #333;padding:2px;text-align:center">'+esc(mlabel)+'</td>';
+      h += '<td style="border:1px solid #333;padding:2px;text-align:center">'+esc(w.no!=null?w.no:'')+'</td>';
+      h += '<td style="border:1px solid #333;padding:2px;font-size:7pt">'+esc(w.place)+(w.side?' '+esc(w.side):'')+'</td>';
+      h += '<td style="border:1px solid #333;padding:2px;font-size:7pt">'+esc(w.content)+'</td>';
+      h += '<td style="border:1px solid #333;padding:2px;font-size:7pt">'+esc(w.detail||'')+'</td>';
+      h += '<td style="border:1px solid #333;padding:2px;font-size:7pt">'+esc(w.comment||'')+'</td>';
+      h += '<td style="border:1px solid #333;padding:2px;text-align:center;font-size:7pt">'+esc(w.assignee||'')+'</td>';
+      h += '<td style="border:1px solid #333;padding:2px;text-align:center;font-size:7pt">'+esc(w.status)+'</td>';
+      h += '</tr>';
+    });
+    h += '</tbody></table>';
+  }
+  h += '</div>';
+
+  // 完了した経過観察一覧
+  var doneWatches = getWatchDone().slice()
+    .sort(function(a,b){ return (b.doneDate||'').localeCompare(a.doneDate||''); });
+  h += '<div style="margin-top:10px;page-break-inside:auto">';
+  h += '<div style="font-size:11pt;font-weight:bold;border-bottom:1.5px solid #000;padding-bottom:2px;margin-bottom:4px">完了した経過観察一覧 ('+doneWatches.length+'件)</div>';
+  if(doneWatches.length===0){
+    h += '<div style="font-size:9pt">完了した経過観察はありません。</div>';
+  } else {
+    h += '<table style="width:100%;border-collapse:collapse;font-size:8pt;color:#000">';
+    h += '<thead><tr style="background:#d9ead3">';
+    h += '<th style="border:1px solid #333;padding:2px;width:42pt">発生月</th>';
+    h += '<th style="border:1px solid #333;padding:2px;width:26pt">No.</th>';
+    h += '<th style="border:1px solid #333;padding:2px;width:36pt">完了日</th>';
+    h += '<th style="border:1px solid #333;padding:2px;width:55pt">場所</th>';
+    h += '<th style="border:1px solid #333;padding:2px">点検内容</th>';
+    h += '<th style="border:1px solid #333;padding:2px">観察内容</th>';
+    h += '<th style="border:1px solid #333;padding:2px">対応コメント</th>';
+    h += '<th style="border:1px solid #333;padding:2px;width:40pt">担当</th>';
+    h += '</tr></thead><tbody>';
+    doneWatches.forEach(function(w){
+      var mlabel = w.date ? (w.date.split('-')[0]+'/'+w.date.split('-')[1]) : '';
+      h += '<tr>';
+      h += '<td style="border:1px solid #333;padding:2px;text-align:center">'+esc(mlabel)+'</td>';
+      h += '<td style="border:1px solid #333;padding:2px;text-align:center">'+esc(w.no!=null?w.no:'')+'</td>';
+      h += '<td style="border:1px solid #333;padding:2px;text-align:center;font-size:7pt">'+esc(w.doneDate||'')+'</td>';
+      h += '<td style="border:1px solid #333;padding:2px;font-size:7pt">'+esc(w.place)+(w.side?' '+esc(w.side):'')+'</td>';
+      h += '<td style="border:1px solid #333;padding:2px;font-size:7pt">'+esc(w.content)+'</td>';
+      h += '<td style="border:1px solid #333;padding:2px;font-size:7pt">'+esc(w.detail||'')+'</td>';
+      h += '<td style="border:1px solid #333;padding:2px;font-size:7pt">'+esc(w.comment||'')+'</td>';
+      h += '<td style="border:1px solid #333;padding:2px;text-align:center;font-size:7pt">'+esc(w.assignee||'')+'</td>';
+      h += '</tr>';
+    });
+    h += '</tbody></table>';
+  }
+  h += '</div>';
+
+  h += '</div>';
+  el('print-area').innerHTML = h;
+}
+
+// ============================================================
+// イベントハンドラ登録
+// ============================================================
+function attachSyncHandlers(){
+  if(el('btn-refresh')) el('btn-refresh').onclick = refresh;
+  if(el('btn-editmode')) el('btn-editmode').onclick = toggleEditMode;
+}
+function attachHandlers(){
+  // 設備切替
+  var mts = document.querySelectorAll('[data-machine]');
+  for(var i=0;i<mts.length;i++){ mts[i].onclick = (function(mid){ return function(){ switchMachine(mid); }; })(mts[i].getAttribute('data-machine')); }
+  // タブ
+  var tbs = document.querySelectorAll('[data-tab]');
+  for(var i=0;i<tbs.length;i++){ tbs[i].onclick = (function(t){ return function(){ switchTab(t); }; })(tbs[i].getAttribute('data-tab')); }
+  attachSyncHandlers();
+
+  // 点検タブ
+  if(el('inp-date')) el('inp-date').onchange = function(){ flushSave(); STATE.date=this.value; render(); };
+  if(el('inp-inspector')) el('inp-inspector').onchange = function(){ updateMeta('inspector', this.value); };
+  if(el('inp-checker')) el('inp-checker').onchange = function(){ updateMeta('checker', this.value); };
+  var jbs = document.querySelectorAll('[data-result]');
+  for(var i=0;i<jbs.length;i++){
+    jbs[i].onclick = (function(id,val){ return function(){ setResult(id,val); }; })(jbs[i].getAttribute('data-id'), jbs[i].getAttribute('data-result'));
+  }
+  var nts = document.querySelectorAll('[data-note]');
+  for(var i=0;i<nts.length;i++){
+    nts[i].onchange = (function(id){ return function(){ setNote(id, this.value); }; })(nts[i].getAttribute('data-note'));
+  }
+  if(el('btn-clearday')) el('btn-clearday').onclick = clearDay;
+
+  // 点検フィルタ + NGジャンプ
+  var fbs = document.querySelectorAll('[data-filter]');
+  for(var i=0;i<fbs.length;i++){ fbs[i].onclick = (function(f){ return function(){ setCheckFilter(f); }; })(fbs[i].getAttribute('data-filter')); }
+  if(el('btn-jump-ng')) el('btn-jump-ng').onclick = jumpToNG;
+
+  // 見本写真サムネイル: タップで拡大(点検画面・項目管理リスト共通)
+  var phs = document.querySelectorAll('[data-photo]');
+  for(var i=0;i<phs.length;i++){
+    phs[i].onclick = (function(pid){ return function(){ openPhotoModal(pid); }; })(phs[i].getAttribute('data-photo'));
+  }
+
+  // 履歴タブ
+  var ods = document.querySelectorAll('[data-opendate]');
+  for(var i=0;i<ods.length;i++){ ods[i].onclick = (function(d){ return function(){ openDate(d); }; })(ods[i].getAttribute('data-opendate')); }
+
+  // 不具合タブ
+  var ids = document.querySelectorAll('[data-issue-detail]');
+  for(var i=0;i<ids.length;i++){ ids[i].onchange = (function(id){ return function(){ updateIssue(id,'detail',this.value,true); }; })(ids[i].getAttribute('data-issue-detail')); }
+  var ics = document.querySelectorAll('[data-issue-comment]');
+  for(var i=0;i<ics.length;i++){ ics[i].onchange = (function(id){ return function(){ updateIssue(id,'comment',this.value,true); }; })(ics[i].getAttribute('data-issue-comment')); }
+  var ias = document.querySelectorAll('[data-issue-assignee]');
+  for(var i=0;i<ias.length;i++){ ias[i].onchange = (function(id){ return function(){ updateIssue(id,'assignee',this.value,true); }; })(ias[i].getAttribute('data-issue-assignee')); }
+  var iss = document.querySelectorAll('[data-issue-status]');
+  for(var i=0;i<iss.length;i++){ iss[i].onchange = (function(id){ return function(){ updateIssue(id,'status',this.value); }; })(iss[i].getAttribute('data-issue-status')); }
+  var idl = document.querySelectorAll('[data-issue-delete]');
+  for(var i=0;i<idl.length;i++){ idl[i].onclick = (function(id){ return function(){ deleteIssueFromList(id); }; })(idl[i].getAttribute('data-issue-delete')); }
+
+  // 経過観察タブ
+  var wds = document.querySelectorAll('[data-watch-detail]');
+  for(var i=0;i<wds.length;i++){ wds[i].onchange = (function(id){ return function(){ updateWatch(id,'detail',this.value,true); }; })(wds[i].getAttribute('data-watch-detail')); }
+  var wcs = document.querySelectorAll('[data-watch-comment]');
+  for(var i=0;i<wcs.length;i++){ wcs[i].onchange = (function(id){ return function(){ updateWatch(id,'comment',this.value,true); }; })(wcs[i].getAttribute('data-watch-comment')); }
+  var was = document.querySelectorAll('[data-watch-assignee]');
+  for(var i=0;i<was.length;i++){ was[i].onchange = (function(id){ return function(){ updateWatch(id,'assignee',this.value,true); }; })(was[i].getAttribute('data-watch-assignee')); }
+  var wss = document.querySelectorAll('[data-watch-status]');
+  for(var i=0;i<wss.length;i++){ wss[i].onchange = (function(id){ return function(){ updateWatch(id,'status',this.value); }; })(wss[i].getAttribute('data-watch-status')); }
+  var wdl = document.querySelectorAll('[data-watch-delete]');
+  for(var i=0;i<wdl.length;i++){ wdl[i].onclick = (function(id){ return function(){ deleteWatchFromList(id); }; })(wdl[i].getAttribute('data-watch-delete')); }
+
+  // 項目タブ
+  if(el('btn-additem')) el('btn-additem').onclick = addItem;
+  if(el('btn-init')) el('btn-init').onclick = initializeSheet;
+  if(el('new-content')) el('new-content').onkeydown = function(e){ if(e.key==='Enter'&&STATE.editMode) addItem(); };
+  if(el('new-no')) el('new-no').onkeydown = function(e){ if(e.key==='Enter'&&STATE.editMode) addItem(); };
+  var eis = document.querySelectorAll('[data-edititem]');
+  for(var i=0;i<eis.length;i++){ eis[i].onclick = (function(id){ return function(){ openEditItem(id); }; })(eis[i].getAttribute('data-edititem')); }
+  var dis = document.querySelectorAll('[data-delitem]');
+  for(var i=0;i<dis.length;i++){ dis[i].onclick = (function(id){ return function(){ deleteItem(id); }; })(dis[i].getAttribute('data-delitem')); }
+
+  // 名簿(点検者・確認者)
+  if(el('btn-addstaff')) el('btn-addstaff').onclick = addStaff;
+  if(el('new-staff')) el('new-staff').onkeydown = function(e){ if(e.key==='Enter'&&STATE.editMode) addStaff(); };
+  var dss = document.querySelectorAll('[data-delstaff]');
+  for(var i=0;i<dss.length;i++){ dss[i].onclick = (function(n){ return function(){ deleteStaff(n); }; })(dss[i].getAttribute('data-delstaff')); }
+
+  // 月次タブ
+  if(el('inp-month')) el('inp-month').onchange = function(){ STATE.printMonth=this.value; render(); };
+  if(el('btn-print')) el('btn-print').onclick = doPrintMonth;
+  if(el('btn-excel')) el('btn-excel').onclick = exportExcel;
+}
+
+// 同期バーのHTML文字列を生成(render内で使う)
+function renderSyncBar(){
+  var s = STATE.sync;
+  var h = '<div class="sync-bar no-print" id="sync-bar">';
+  h += '<span class="sync-status"><span class="sync-dot '+syncDotClass()+'"></span><span>'+esc(s.message||'待機中')+'</span>';
+  if(s.at) h += '<span style="color:var(--c-text3)">('+s.at+')</span>';
+  h += '</span>';
+  if(SHEET_URL!=='YOUR_SHEET_URL_HERE' && /^https:\/\//.test(SHEET_URL)) h += '<a class="sheet-link" href="'+esc(SHEET_URL)+'" target="_blank" rel="noopener">📊 シートを開く</a>';
+  h += '<button class="btn sm" id="btn-refresh" style="margin-left:auto">🔄 最新を取得</button>';
+  h += '<button class="btn sm '+(STATE.editMode?'warning':'primary')+'" id="btn-editmode">'+(STATE.editMode?'🔒 編集を終える':'✏ 編集モード')+'</button>';
+  h += '</div>';
+  return h;
+}
+
+// 同期バーのDOMだけを部分更新(画面全体は再描画しない)
+function updateSyncBar(){
+  var existing = el('sync-bar');
+  if(!existing || !existing.parentNode) return;
+  var tmp = document.createElement('div');
+  tmp.innerHTML = renderSyncBar();
+  var fresh = tmp.firstChild;
+  if(!fresh) return;
+  existing.parentNode.replaceChild(fresh, existing);
+  attachSyncHandlers();
+}
+
+// ============================================================
+// 起動
+// ============================================================
+// ページを閉じる時、未保存データがあれば警告
+window.addEventListener('beforeunload', function(e){
+  if(pendingData || saveTimer){
+    e.preventDefault();
+    e.returnValue = '保存中のデータがあります。このまま閉じますか?';
+    return e.returnValue;
+  }
+});
+
+try {
+  refresh();
+} catch(e){
+  showFatalError('アプリ起動失敗', e.message + '\n' + (e.stack||''));
+}
+</script>
+</body>
+</html>
