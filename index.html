@@ -569,6 +569,8 @@ function refresh(){
     // NG項目から不具合を、△項目から経過観察を自動生成
     syncIssuesFromRecords();
     syncWatchesFromRecords();
+    // △の項目に後日×が出ていたら、その経過観察を自動完了
+    escalateWatchToNG();
     STATE.staffNames = (data.staffNames && data.staffNames.length) ? data.staffNames : STATE.staffNames;
     STATE.sync = { state:'online', message:'最新です', at:timeStr() };
     STATE.loading = false;
@@ -792,6 +794,54 @@ function syncWatchesFromRecords(){
         newWatches.forEach(function(w){
           var toSave = {}; for(var p in w){ if(p!=='_unsaved') toSave[p]=w[p]; }
           enqueueSave({ machineId: mid, watch: toSave }, 'saveWatch');
+        });
+      }
+    }
+  }
+}
+
+// 経過観察(△)の項目に後日×が出たら、その経過観察を自動完了する。
+// (製造版から移植。△の項目が×に至ったら観察リストから外し、不具合リスト側に一本化する)
+// 経過観察タブを開くたび(switchTab)に実行される。
+function escalateWatchToNG(){
+  var mids = ['g2','g3','g4','g5'];
+  for(var mi=0; mi<mids.length; mi++){
+    var mid = mids[mi];
+    var records = STATE.allRecords[mid] || {};
+    var watches = STATE.allWatches[mid] || [];
+    if(watches.length===0) continue;
+    // 各項目の×発生日を集める
+    var ngDates = {};
+    for(var d in records){
+      var r = records[d]; if(!r || !r.results) continue;
+      for(var id in r.results){ if(r.results[id]==='ng'){ (ngDates[id] = ngDates[id] || []).push(d); } }
+    }
+    var toComplete = [];
+    watches.forEach(function(w){
+      if(w.status==='完了') return;
+      var nd = ngDates[w.itemId]; if(!nd) return;
+      // 観察開始日(w.date)以降に×が出ているか。最も早い該当×日を完了日にする。
+      var hit = null;
+      for(var i=0;i<nd.length;i++){ if(nd[i] >= w.date){ if(!hit || nd[i] < hit) hit = nd[i]; } }
+      if(hit){ toComplete.push({ w:w, ngDate:hit }); }
+    });
+    if(toComplete.length>0){
+      var done = STATE.allWatchDone[mid] || [];
+      toComplete.forEach(function(o){
+        o.w.status = '完了';
+        if(!o.w.doneDate) o.w.doneDate = o.ngDate;
+        if(!o.w.comment) o.w.comment = '×が発生したため完了(不具合リストへ移行)';
+        if(!done.some(function(x){ return x.id===o.w.id; })){
+          var cp = {}; for(var q in o.w){ if(q!=='_unsaved') cp[q] = o.w[q]; }
+          done.push(cp);
+        }
+      });
+      STATE.allWatches[mid] = watches.filter(function(w){ return w.status!=='完了'; });
+      STATE.allWatchDone[mid] = done;
+      if(isGasConfigured){
+        toComplete.forEach(function(o){
+          var toSave = {}; for(var p in o.w){ if(p!=='_unsaved') toSave[p] = o.w[p]; }
+          enqueueSave({ machineId: mid, watch: toSave }, 'completeWatch');
         });
       }
     }
@@ -1496,7 +1546,7 @@ function confirmLeaveCheck(){
   return true;
 }
 function switchMachine(mid){ if(!confirmLeaveCheck()) return; flushSave(); STATE.machineId=mid; STATE.editingItem=null; STATE.checkFilter='all'; render(); }
-function switchTab(t){ if(t!=='check' && !confirmLeaveCheck()) return; flushSave(); STATE.tab=t; if(t==='issues') syncIssuesFromRecords(); if(t==='watch') syncWatchesFromRecords(); render(); }
+function switchTab(t){ if(t!=='check' && !confirmLeaveCheck()) return; flushSave(); STATE.tab=t; if(t==='issues') syncIssuesFromRecords(); if(t==='watch'){ syncWatchesFromRecords(); escalateWatchToNG(); } render(); }
 function openDate(d){ flushSave(); STATE.date=d; STATE.tab='check'; render(); }
 
 // ============================================================
