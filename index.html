@@ -24,6 +24,7 @@
     #print-area, #print-area * { visibility: visible; }
     #print-area { position: absolute; left: 0; top: 0; width: 100%; }
     .no-print { display: none !important; }
+    #print-area tr { break-inside: avoid; page-break-inside: avoid; }
   }
   #print-area { display: none; }
   #print-area.show { display: block; }
@@ -109,6 +110,7 @@
   .pill { display: inline-block; padding: 2px 10px; border-radius: var(--r-md); font-size: 12px; font-weight: 500; }
   .pill-ok { background: var(--c-success-bg); color: var(--c-success); }
   .pill-ng { background: var(--c-danger-bg); color: var(--c-danger); }
+  .pill-tri { background: var(--c-warn-bg); color: var(--c-warn); }
 
   .item-mgr { display: grid; grid-template-columns: 50px 130px 90px 1fr 80px; gap: 8px; align-items: center; padding: 10px 12px; background: var(--c-bg); border: 1px solid var(--c-bd); border-radius: var(--r-md); margin-bottom: 6px; }
   .item-mgr.item-mgr-photo { grid-template-columns: 50px 56px 130px 90px 1fr 80px; }
@@ -137,6 +139,45 @@
   .month-table .ok-cell { color: #060; font-weight: bold; text-align: center; font-size: 10pt; }
   .month-table .ng-cell { color: #c00; font-weight: bold; text-align: center; font-size: 10pt; background: #ffe8e8; }
   .month-table .tri-cell { color: #946000; font-weight: bold; text-align: center; font-size: 10pt; background: #fff3df; }
+
+  /* 品種(点検実施の上部) */
+  .field-product { min-width: 160px; }
+  .prod-picker { display: flex; flex-wrap: wrap; align-items: center; gap: 6px; min-height: 44px; }
+  .prod-chip { display: inline-flex; align-items: center; gap: 4px; min-height: 36px; max-width: 100%; box-sizing: border-box; padding: 4px 6px 4px 12px; line-height: 1.3; overflow-wrap: anywhere; background: var(--c-success-bg); color: var(--c-success); border: 1px solid var(--c-success-bd); border-radius: 999px; font-size: 14px; }
+  .prod-chip-x { flex-shrink: 0; width: 24px; height: 24px; border: none; border-radius: 50%; background: transparent; color: var(--c-text2); cursor: pointer; font-size: 15px; line-height: 1; padding: 0; }
+  .prod-arrow { color: var(--c-text3); font-size: 14px; }
+  .top-bar .prod-picker select { width: auto; min-width: 150px; }
+  /* 引き継ぎメモ(点検実施) */
+  .memo-box { padding: 12px 14px; background: var(--c-bg); border: 1px solid var(--c-bd); border-radius: var(--r-lg); margin-bottom: 14px; }
+  .memo-head { display: flex; align-items: center; gap: 8px; flex-wrap: wrap; }
+  .memo-title { font-size: 14px; font-weight: 500; }
+  .memo-head .btn { margin-left: auto; }
+  .memo-sub { font-size: 12px; color: var(--c-text2); margin: 10px 0 4px; }
+  .memo-empty { font-size: 13px; color: var(--c-text3); }
+  .memo-item { display: flex; gap: 8px; align-items: flex-start; padding: 8px 10px; background: var(--c-bg2); border-radius: var(--r-md); margin-bottom: 6px; }
+  .memo-item.prev { background: var(--c-warn-bg); border-left: 3px solid #FAC775; }
+  .memo-meta { font-size: 12px; color: var(--c-text2); white-space: nowrap; }
+  .memo-item.failed { background: var(--c-danger-bg); border-left: 3px solid var(--c-danger-bd); }
+  .memo-unsaved { display: inline-block; margin-right: 6px; padding: 0 8px; font-size: 11px; border-radius: var(--r-md); background: var(--c-danger); color: #fff; vertical-align: 1px; }
+  .memo-btns { display: flex; gap: 6px; flex-shrink: 0; }
+  .memo-text { flex: 1; min-width: 0; font-size: 14px; line-height: 1.5; white-space: pre-wrap; word-break: break-word; }
+  .memo-input { margin-top: 10px; }
+  .memo-input textarea { width: 100%; min-height: 64px; padding: 8px 10px; border: 1px solid var(--c-bd2); border-radius: var(--r-md); font-size: 14px; font-family: var(--font); background: var(--c-bg); color: var(--c-text); box-sizing: border-box; resize: vertical; }
+  .memo-input-row { display: flex; gap: 8px; align-items: center; flex-wrap: wrap; margin-top: 6px; font-size: 13px; color: var(--c-text2); }
+  .memo-input-row select { height: 36px; padding: 0 8px; border: 1px solid var(--c-bd2); border-radius: var(--r-md); font-family: var(--font); background: var(--c-bg); color: var(--c-text); }
+  .memo-input-row .btn:last-child { margin-left: auto; }
+  /* メモ一覧(履歴タブ) */
+  .memo-controls { display: flex; gap: 8px; flex-wrap: wrap; align-items: center; margin-bottom: 10px; }
+  .memo-controls input { flex: 1 1 220px; height: 44px; padding: 0 12px; font-size: 15px; border: 1px solid var(--c-bd2); border-radius: var(--r-md); background: var(--c-bg); color: var(--c-text); font-family: var(--font); box-sizing: border-box; }
+  .memo-controls select { height: 44px; padding: 0 10px; font-size: 14px; border: 1px solid var(--c-bd2); border-radius: var(--r-md); background: var(--c-bg); color: var(--c-text); font-family: var(--font); }
+  .memo-count { font-size: 13px; color: var(--c-text2); margin: 4px 0 8px; }
+  .memo-row { padding: 10px 12px; background: var(--c-bg); border: 1px solid var(--c-bd); border-radius: var(--r-md); margin-bottom: 8px; }
+  .memo-row-head { display: flex; align-items: center; gap: 8px; flex-wrap: wrap; font-size: 13px; color: var(--c-text2); margin-bottom: 4px; }
+  .memo-row-head b { color: var(--c-text); font-size: 14px; }
+  .memo-row-head .memo-row-btns { margin-left: auto; display: flex; gap: 6px; }
+  .memo-row-text { font-size: 14px; line-height: 1.6; white-space: pre-wrap; word-break: break-word; }
+  .memo-line { font-size: 11px; color: var(--c-info); background: var(--c-info-bg); padding: 1px 8px; border-radius: var(--r-md); }
+  mark { background: #ffe58a; color: inherit; padding: 0 1px; border-radius: 2px; }
 
   .spinner { display: inline-block; width: 28px; height: 28px; border: 3px solid #e0e0e0; border-top-color: var(--c-info); border-radius: 50%; animation: spin 0.8s linear infinite; }
   @keyframes spin { to { transform: rotate(360deg); } }
@@ -217,6 +258,21 @@
     .photo-edit-thumb, .photo-edit-empty { width: 100%; height: 180px; }
     .photo-edit-btns { flex-direction: row; flex-wrap: wrap; width: 100%; }
     .photo-edit-btns .btn { flex: 1; }
+
+    .top-bar .prod-picker select { flex: 1; width: auto; }
+    .prod-chip { min-height: 40px; font-size: 16px; }
+    /* 引き継ぎメモ: 入力欄と文字を大きく */
+    .memo-text, .memo-row-text { font-size: 16px; }
+    .memo-input textarea { font-size: 16px; min-height: 80px; }
+    .memo-input-row select { height: 44px; font-size: 16px; flex: 1; }
+    .memo-input-row .btn { height: 44px; }
+    .memo-item { flex-direction: column; gap: 2px; }
+    .memo-item .memo-btns { align-self: flex-end; }
+    .memo-controls input, .memo-controls select { height: 50px; font-size: 16px; }
+    .memo-controls select { flex: 1; }
+    #btn-addstaff, #btn-addproduct { white-space: nowrap; }
+    #new-staff, #new-product { min-width: 0; }
+    .hist-row { grid-template-columns: 1fr; }
   }
 </style>
 </head>
@@ -514,15 +570,26 @@ var STATE = {
   allIssues: { g2: [], g3: [], g4: [], g5: [] },
   allDoneIssues: { g2: [], g3: [], g4: [], g5: [] },
   allIgnoredKeys: { g2: [], g3: [], g4: [], g5: [] },
+  allIgnoredDelDate: { g2: {}, g3: {}, g4: {}, g5: {} },   // 項目id → 不具合を最後に削除した日
   allWatches: { g2: [], g3: [], g4: [], g5: [] },
   allWatchDone: { g2: [], g3: [], g4: [], g5: [] },
   allWatchIgnored: { g2: [], g3: [], g4: [], g5: [] },
+  allWatchIgnoredDelDate: { g2: {}, g3: {}, g4: {}, g5: {} }, // 項目id → 経過観察を最後に削除した日
   date: todayStr(),
   editMode: false,
   sync: { state:'idle', message:'', at:null },
   printMonth: currentMonthStr(),
   editingItem: null,
   staffNames: [],
+  allProducts: { g2: [], g3: [], g4: [], g5: [] },  // ラインごとの品種リスト
+  allMemos: { g2: [], g3: [], g4: [], g5: [] },     // ラインごとの引き継ぎメモ
+  memoDraft: '',        // 書きかけのメモ(再描画で消えないように保持)
+  memoAuthor: null,     // メモの記入者(null のときはその日の点検者)
+  memoWriting: false,   // 点検実施のメモ入力欄を開いているか
+  historyView: 'dates', // 履歴タブの表示: 'dates' 日付一覧 / 'memos' メモ一覧
+  memoQuery: '',        // メモ一覧の検索語
+  memoLine: 'this',     // メモ一覧のライン: 'this' このライン / 'all' 全ライン
+  memoPeriod: 'all',    // メモ一覧の期間: 'all' 全期間 / 'month' 今月 / '3m' 直近3か月
   checkFilter: 'all',
   loading: true
 };
@@ -537,8 +604,10 @@ function getWatches(){ return STATE.allWatches[STATE.machineId] || []; }
 function getWatchDone(){ return STATE.allWatchDone[STATE.machineId] || []; }
 function getCurrent(){ 
   var r = getRecords()[STATE.date];
-  return r || { results:{}, notes:{}, inspector:'', checker:'' };
+  return r || { results:{}, notes:{}, inspector:'', checker:'', product:'' };
 }
+function getProducts(){ return STATE.allProducts[STATE.machineId] || []; }
+function getMemos(mid){ return STATE.allMemos[mid || STATE.machineId] || []; }
 function getMachine(){ return MACHINES[STATE.machineId]; }
 
 // ============================================================
@@ -548,7 +617,10 @@ function refresh(){
   if(!isGasConfigured){ STATE.loading=false; render(); return; }
   STATE.sync = { state:'syncing', message:'同期中...', at:null };
   render();
+  var seq = ++loadSeq;
   callGAS('loadAll', {}, function(data){
+    if(seq < lastAppliedSeq) return;   // 後から始めた読み込みの結果がもう反映されている
+    lastAppliedSeq = seq;
     var mids = ['g2','g3','g4','g5'];
     for(var i=0;i<mids.length;i++){
       var mid = mids[i];
@@ -559,15 +631,23 @@ function refresh(){
       STATE.allIssues[mid] = (data.issues && data.issues[mid]) || [];
       STATE.allDoneIssues[mid] = (data.doneIssues && data.doneIssues[mid]) || [];
       STATE.allIgnoredKeys[mid] = (data.ignoredKeys && data.ignoredKeys[mid]) || [];
+      STATE.allIgnoredDelDate[mid] = (data.ignoredDelDate && data.ignoredDelDate[mid]) || {};
       STATE.allWatches[mid] = (data.watches && data.watches[mid]) || [];
       STATE.allWatchDone[mid] = (data.watchDone && data.watchDone[mid]) || [];
       STATE.allWatchIgnored[mid] = (data.watchIgnored && data.watchIgnored[mid]) || [];
+      STATE.allWatchIgnoredDelDate[mid] = (data.watchIgnoredDelDate && data.watchIgnoredDelDate[mid]) || {};
+      STATE.allProducts[mid] = applyProductOps(mid, (data.products && data.products[mid]) || []);
+      STATE.allMemos[mid] = mergePendingMemos(mid, (data.memos && data.memos[mid]) || []);
     }
+    prunePendingMemos(seq);
+    prunePendingProducts(seq);
     // 同じ項目の未解決重複を1件に統合(過去の重複登録の後始末)
     mergeOpenIssues();
     mergeOpenWatches();
     // NG項目から不具合を、△項目から経過観察を自動生成
     syncIssuesFromRecords();
+    // △を○/×に付け直した経過観察を消してから、△の記録で経過観察を作り直す
+    discardCorrectedWatches();
     syncWatchesFromRecords();
     // △の項目に後日×が出ていたら、その経過観察を自動完了
     escalateWatchToNG();
@@ -576,6 +656,7 @@ function refresh(){
     STATE.loading = false;
     render();
   }, function(e){
+    if(seq < lastAppliedSeq) return;
     STATE.sync = { state:'error', message:'同期エラー: '+e.message, at:null };
     STATE.loading = false;
     render();
@@ -619,6 +700,7 @@ function mergeOpenIssues(){
       STATE.allIssues[mid] = kept.concat(closed);
       if(isGasConfigured){
         toDelete.forEach(function(is){
+          cancelIssueSave(is.id);
           enqueueSave({ machineId: mid, issueId: is.id, itemId: is.itemId, date: is.date }, 'deleteIssue');
         });
       }
@@ -633,6 +715,23 @@ function issueInfoScore(is){
   if(is.assignee && String(is.assignee).trim()) s += 1;
   if(is.status && is.status!=='未着手') s += 1;
   return s;
+}
+
+// 項目ごとの「締め日」= その項目の不具合(経過観察)を最後に完了・削除した日。
+// 締め日以前に付いた×(△)は、完了・削除したものに含まれていた(繰り越し中に付いた)とみなす。
+//   closedList : 完了したもの(完了日を使う。無ければ発生日)
+//   ignoredKeys: 削除済み台帳のキー「項目id|発生日」(削除日が分からない旧データは発生日を使う)
+//   delDates   : 項目id → 最後に削除した日(台帳の削除日時。GASが返す)
+function closedUntilByItem(closedList, ignoredKeys, delDates){
+  var until = {};
+  function bump(itemId, d){ if(itemId && d && (!until[itemId] || d > until[itemId])) until[itemId] = d; }
+  closedList.forEach(function(x){ bump(x.itemId, x.doneDate || x.date); });
+  ignoredKeys.forEach(function(k){
+    var s = String(k), p = s.lastIndexOf('|');
+    if(p > 0) bump(s.slice(0, p), s.slice(p + 1));
+  });
+  for(var id in delDates){ bump(id, delDates[id]); }
+  return until;
 }
 
 function syncIssuesFromRecords(){
@@ -651,15 +750,23 @@ function syncIssuesFromRecords(){
     issues.forEach(function(is){ existKey[is.itemId + '|' + is.date] = true; });
     doneIssues.forEach(function(is){ existKey[is.itemId + '|' + is.date] = true; });
     // ★削除済み台帳に載っている itemId|発生日 も「登録済み」とみなし、再生成しない。
-    //   (同じ項目でも別の日に再発したNGは、台帳に無いので新しい不具合として生成される)
+    //   (完了・削除した日より後に再発したNGは、新しい不具合として生成される)
     ignoredKeys.forEach(function(k){ existKey[k] = true; });
+    // ★項目ごとの締め日(最後に完了・削除した日)。締め日以前のNGからは作り直さない。
+    //   連日NGの項目は、未完了の間は1件に繰り越される(下の openByItem)。締め日で照合しないと、
+    //   完了・削除した後に、繰り越し中に付いた翌日以降のNGから不具合が作り直されてしまう。
+    var closedUntil = closedUntilByItem(
+      doneIssues.concat(issues.filter(function(is){ return is.status==='完了'; })),
+      ignoredKeys, STATE.allIgnoredDelDate[mid] || {});
     // 「この項目は未完了の不具合が既にある」かどうかの索引(繰り越し中の判定用)。
     //   ループ内で新規追加したぶんもここに足し、同一項目の多重生成を防ぐ。
     var openByItem = {};
     issues.forEach(function(is){ if(is.status!=='完了') openByItem[is.itemId] = true; });
-    // 各日付の記録を走査し、NGを見つける
+    // 各日付の記録を古い順に走査し、NGを見つける(発生日が最初のNGの日になるように)
     var newIssues = [];
-    for(var date in records){
+    var dates = Object.keys(records).sort();
+    for(var di=0; di<dates.length; di++){
+      var date = dates[di];
       var rec = records[date];
       if(!rec || !rec.results) continue;
       for(var itemId in rec.results){
@@ -668,6 +775,8 @@ function syncIssuesFromRecords(){
         if(existKey[key]) continue; // 既に登録済み(未完了・完了済みのどちらも)
         // 同じ項目で「未完了」の不具合が既にあれば、新規追加しない(繰り越し中とみなす)
         if(openByItem[itemId]) continue;
+        // 締め日以前のNGは、完了・削除した不具合に含まれていたもの
+        if(closedUntil[itemId] && date <= closedUntil[itemId]) continue;
         var it = null;
         for(var k=0;k<items.length;k++){ if(items[k].id===itemId){ it=items[k]; break; } }
         var note = (rec.notes && rec.notes[itemId]) || '';
@@ -735,6 +844,7 @@ function mergeOpenWatches(){
       STATE.allWatches[mid] = kept.concat(closed);
       if(isGasConfigured){
         toDelete.forEach(function(w){
+          cancelWatchSave(w.id);
           enqueueSave({ machineId: mid, watchId: w.id, itemId: w.itemId, date: w.date }, 'deleteWatch');
         });
       }
@@ -756,10 +866,16 @@ function syncWatchesFromRecords(){
     watches.forEach(function(w){ existKey[w.itemId + '|' + w.date] = true; });
     doneW.forEach(function(w){ existKey[w.itemId + '|' + w.date] = true; });
     ignoredKeys.forEach(function(k){ existKey[k] = true; });
+    // 締め日(最後に完了・削除した日)以前の△からは作り直さない(不具合と同じ)
+    var closedUntil = closedUntilByItem(
+      doneW.concat(watches.filter(function(w){ return w.status==='完了'; })),
+      ignoredKeys, STATE.allWatchIgnoredDelDate[mid] || {});
     var openByItem = {};
     watches.forEach(function(w){ if(w.status!=='完了') openByItem[w.itemId] = true; });
     var newWatches = [];
-    for(var date in records){
+    var dates = Object.keys(records).sort(); // 古い順(発生日が最初の△の日になるように)
+    for(var di=0; di<dates.length; di++){
+      var date = dates[di];
       var rec = records[date];
       if(!rec || !rec.results) continue;
       for(var itemId in rec.results){
@@ -767,6 +883,7 @@ function syncWatchesFromRecords(){
         var key = itemId + '|' + date;
         if(existKey[key]) continue;
         if(openByItem[itemId]) continue;
+        if(closedUntil[itemId] && date <= closedUntil[itemId]) continue;
         var it = null;
         for(var k=0;k<items.length;k++){ if(items[k].id===itemId){ it=items[k]; break; } }
         var note = (rec.notes && rec.notes[itemId]) || '';
@@ -800,9 +917,51 @@ function syncWatchesFromRecords(){
   }
 }
 
+// ×による自動完了で入れるコメント(この文言のままの完了分を「自動完了」と見分ける)
+var AUTO_DONE_COMMENT = '×が発生したため完了(不具合リストへ移行)';
+
+// 経過観察を△の記録に追従させる(syncWatchesFromRecords・escalateWatchToNG より前に呼ぶ)
+//  ・観察開始日の判定が ○ か × に付け直された(△を訂正した)経過観察を消す。
+//    台帳には書かない(書くと、同じ項目の別の日の△まで経過観察にならなくなるため)。
+//  ・消すのは、まだ誰も手を付けていないもの(担当・対応コメントが空で未着手)と、
+//    ×による自動完了分(コメントが自動の文言のままで担当が空)だけ。手で入力・完了したものは残す。
+//  ・記録が無い日・判定が空白の日は付け直しとみなさない(古いGASでは△が空白で保存されていたため)。
+function discardCorrectedWatches(){
+  var mids = ['g2','g3','g4','g5'];
+  for(var mi=0; mi<mids.length; mi++){
+    var mid = mids[mi];
+    var records = STATE.allRecords[mid] || {};
+    var openList = STATE.allWatches[mid] || [];
+    var doneList = STATE.allWatchDone[mid] || [];
+    var corrected = function(w){
+      var rec = records[w.date];
+      var v = (rec && rec.results) ? rec.results[w.itemId] : undefined;
+      return v==='ok' || v==='ng';
+    };
+    var discard = {};
+    openList.forEach(function(w){
+      if(w.status==='完了') return;
+      var untouched = !String(w.comment||'').trim() && !String(w.assignee||'').trim() && (w.status||'未着手')==='未着手';
+      if(untouched && corrected(w)) discard[w.id] = true;
+    });
+    doneList.forEach(function(w){
+      if(w.comment===AUTO_DONE_COMMENT && !String(w.assignee||'').trim() && corrected(w)) discard[w.id] = true;
+    });
+    var ids = Object.keys(discard);
+    if(ids.length===0) continue;
+    STATE.allWatches[mid] = openList.filter(function(w){ return !discard[w.id]; });
+    STATE.allWatchDone[mid] = doneList.filter(function(w){ return !discard[w.id]; });
+    ids.forEach(function(id){
+      cancelWatchSave(id);
+      if(isGasConfigured) enqueueSave({ machineId: mid, watchId: id }, 'discardWatch');
+    });
+  }
+}
+
 // 経過観察(△)の項目に後日×が出たら、その経過観察を自動完了する。
 // (製造版から移植。△の項目が×に至ったら観察リストから外し、不具合リスト側に一本化する)
-// 経過観察タブを開くたび(switchTab)に実行される。
+// 同じ日の×は△の付け直しなので対象外(手を付けていなければ discardCorrectedWatches で消える)。
+// 読み込み時と、経過観察タブを開くたび(switchTab)に実行される。
 function escalateWatchToNG(){
   var mids = ['g2','g3','g4','g5'];
   for(var mi=0; mi<mids.length; mi++){
@@ -820,17 +979,18 @@ function escalateWatchToNG(){
     watches.forEach(function(w){
       if(w.status==='完了') return;
       var nd = ngDates[w.itemId]; if(!nd) return;
-      // 観察開始日(w.date)以降に×が出ているか。最も早い該当×日を完了日にする。
+      // 観察開始日(w.date)より後の日に×が出ているか。最も早い該当×日を完了日にする。
       var hit = null;
-      for(var i=0;i<nd.length;i++){ if(nd[i] >= w.date){ if(!hit || nd[i] < hit) hit = nd[i]; } }
+      for(var i=0;i<nd.length;i++){ if(nd[i] > w.date){ if(!hit || nd[i] < hit) hit = nd[i]; } }
       if(hit){ toComplete.push({ w:w, ngDate:hit }); }
     });
     if(toComplete.length>0){
       var done = STATE.allWatchDone[mid] || [];
       toComplete.forEach(function(o){
+        cancelWatchSave(o.w.id);
         o.w.status = '完了';
         if(!o.w.doneDate) o.w.doneDate = o.ngDate;
-        if(!o.w.comment) o.w.comment = '×が発生したため完了(不具合リストへ移行)';
+        if(!o.w.comment) o.w.comment = AUTO_DONE_COMMENT;
         if(!done.some(function(x){ return x.id===o.w.id; })){
           var cp = {}; for(var q in o.w){ if(q!=='_unsaved') cp[q] = o.w[q]; }
           done.push(cp);
@@ -853,8 +1013,10 @@ function escalateWatchToNG(){
 // ============================================================
 var saveQueue = [];
 var saveQueueRunning = false;
-function enqueueSave(payload, action){
-  saveQueue.push({ payload: payload, action: action });
+// opts.post: POSTで送る(長い文章向け。失敗したらGETで送り直す)
+// opts.done(ok, res): 送信が終わったら(成功・失敗とも)呼ばれる。res はサーバの応答
+function enqueueSave(payload, action, opts){
+  saveQueue.push({ payload: payload, action: action, opts: opts || {} });
   runSaveQueue();
 }
 function runSaveQueue(){
@@ -863,15 +1025,25 @@ function runSaveQueue(){
   saveQueueRunning = true;
   var job = saveQueue.shift();
   STATE.sync = { state:'syncing', message:'保存中... (残'+ (saveQueue.length+1) +')', at:null }; updateSyncBar();
-  callGAS(job.action, job.payload, function(){
+  var send = job.opts.post ? postWithFallback : callGAS;
+  send(job.action, job.payload, function(res){
     saveQueueRunning = false;
+    if(job.opts.done) job.opts.done(true, res);
     if(saveQueue.length===0){ STATE.sync = { state:'editing', message:'保存しました', at:timeStr() }; updateSyncBar(); }
     runSaveQueue();
   }, function(e){
     saveQueueRunning = false;
+    if(job.opts.done) job.opts.done(false);
     STATE.sync = { state:'error', message:'保存失敗: '+e.message, at:null }; updateSyncBar();
     // 失敗しても次のジョブは試す
     runSaveQueue();
+  });
+}
+// POSTで送り、失敗したらGET(JSONP)で送り直す。同じidの保存は上書きなので二重に届いても問題ない
+function postWithFallback(action, body, cb, errcb){
+  postGAS(action, body, cb, function(e1){
+    console.warn('POST失敗、GETで再送:', e1.message);
+    callGAS(action, body, cb, errcb);
   });
 }
 
@@ -886,6 +1058,7 @@ function updateIssue(issueId, field, value, noRender){
 
   // 「完了」にした場合: 完了済みシートへ移動し、画面リストからも除去
   if(field==='status' && value==='完了'){
+    cancelIssueSave(issueId);
     target.status = '完了';
     if(!target.doneDate) target.doneDate = todayStr();
     // ローカルリストから除去(画面から消える)
@@ -914,21 +1087,26 @@ function updateIssue(issueId, field, value, noRender){
 }
 
 // 不具合をリストから削除(完了済みには移さない)。
-// 削除した「項目+発生日」は台帳に記録され、その日のNGからは二度と自動生成されない。
-// 別の日に同じ項目が再発した場合は、新しい不具合として通常どおり表示される。
+// 削除した「項目+発生日」と削除日時は台帳に記録され、削除日までに付いたこの項目のNG
+// (繰り越し中に付いたNGを含む)からは二度と自動生成されない。
+// 削除日より後に同じ項目が再発した場合は、新しい不具合として通常どおり表示される。
 function deleteIssueFromList(issueId){
   var issues = getIssues();
   var target = null;
   for(var i=0;i<issues.length;i++){ if(issues[i].id===issueId){ target=issues[i]; break; } }
   if(!target) return;
-  if(!confirm('この不具合をリストから削除しますか?\n(完了済みには残りません。削除したこの発生日のぶんは今後復活しません。\n別の日に同じ箇所が再びNGになれば、新しい不具合として表示されます)')) return;
+  if(!confirm('この不具合をリストから削除しますか?\n(完了済みには残りません。今日までに付いたこの箇所の×からは今後復活しません。\n明日以降に同じ箇所が再びNGになれば、新しい不具合として表示されます)')) return;
+  cancelIssueSave(issueId);
   // ローカルから除去
   STATE.allIssues[STATE.machineId] = issues.filter(function(x){ return x.id !== issueId; });
-  // 台帳キーをローカルにも即時反映(この場で再生成されないように)
+  // 台帳キーと削除日をローカルにも即時反映(この場で再生成されないように)
   var keys = STATE.allIgnoredKeys[STATE.machineId] || [];
   var k = target.itemId + '|' + target.date;
   if(keys.indexOf(k) < 0){ keys = keys.concat([k]); }
   STATE.allIgnoredKeys[STATE.machineId] = keys;
+  var dd = STATE.allIgnoredDelDate[STATE.machineId] || {};
+  dd[target.itemId] = todayStr();
+  STATE.allIgnoredDelDate[STATE.machineId] = dd;
   // サーバ側でも削除+台帳記録
   if(isGasConfigured){
     enqueueSave({ machineId: STATE.machineId, issueId: issueId, itemId: target.itemId, date: target.date }, 'deleteIssue');
@@ -945,8 +1123,9 @@ function updateWatch(watchId, field, value, noRender){
   for(var i=0;i<watches.length;i++){ if(watches[i].id===watchId){ target=watches[i]; break; } }
   if(!target) return;
 
-  // 「完了」: 経過観察完了済みシートへ移動し、画面リストから除去
+  // 「完了」: 経過観察完了シートへ移動し、画面リストから除去
   if(field==='status' && value==='完了'){
+    cancelWatchSave(watchId);
     target.status = '完了';
     if(!target.doneDate) target.doneDate = todayStr();
     STATE.allWatches[STATE.machineId] = watches.filter(function(x){ return x.id !== watchId; });
@@ -970,17 +1149,22 @@ function updateWatch(watchId, field, value, noRender){
 }
 
 // 経過観察をリストから削除(完了済みには移さず、台帳に記録して再生成を防ぐ)
+// 削除日までに付いたこの項目の△(繰り越し中に付いた△を含む)からは二度と自動生成されない。
 function deleteWatchFromList(watchId){
   var watches = getWatches();
   var target = null;
   for(var i=0;i<watches.length;i++){ if(watches[i].id===watchId){ target=watches[i]; break; } }
   if(!target) return;
-  if(!confirm('この経過観察をリストから削除しますか?\n(完了済みには残りません。削除したこの発生日のぶんは今後復活しません。\n別の日に同じ箇所が再び△になれば、新しい経過観察として表示されます)')) return;
+  if(!confirm('この経過観察をリストから削除しますか?\n(完了済みには残りません。今日までに付いたこの箇所の△からは今後復活しません。\n明日以降に同じ箇所が再び△になれば、新しい経過観察として表示されます)')) return;
+  cancelWatchSave(watchId);
   STATE.allWatches[STATE.machineId] = watches.filter(function(x){ return x.id !== watchId; });
   var keys = STATE.allWatchIgnored[STATE.machineId] || [];
   var k = target.itemId + '|' + target.date;
   if(keys.indexOf(k) < 0){ keys = keys.concat([k]); }
   STATE.allWatchIgnored[STATE.machineId] = keys;
+  var dd = STATE.allWatchIgnoredDelDate[STATE.machineId] || {};
+  dd[target.itemId] = todayStr();
+  STATE.allWatchIgnoredDelDate[STATE.machineId] = dd;
   if(isGasConfigured){
     enqueueSave({ machineId: STATE.machineId, watchId: watchId, itemId: target.itemId, date: target.date }, 'deleteWatch');
   }
@@ -992,13 +1176,18 @@ var watchSaveTimers = {};
 function scheduleWatchSave(watch){
   if(!isGasConfigured) return;
   var id = watch.id;
+  var mid = STATE.machineId; // 予約した時点のライン(待機中にラインを切り替えても別ラインへ保存しない)
   STATE.sync = { state:'syncing', message:'保存待機中...', at:null }; updateSyncBar();
   if(watchSaveTimers[id]) clearTimeout(watchSaveTimers[id]);
   watchSaveTimers[id] = setTimeout(function(){
     delete watchSaveTimers[id];
     var toSave = {}; for(var p in watch){ if(p!=='_unsaved') toSave[p]=watch[p]; }
-    enqueueSave({ machineId: STATE.machineId, watch: toSave }, 'saveWatch');
+    enqueueSave({ machineId: mid, watch: toSave }, 'saveWatch');
   }, 800);
+}
+// 待機中の保存を取り消す(完了・削除の直前に呼ぶ) ── cancelIssueSave の並列版
+function cancelWatchSave(id){
+  if(watchSaveTimers[id]){ clearTimeout(watchSaveTimers[id]); delete watchSaveTimers[id]; }
 }
 
 // 点検の備考を、対応する未完了の経過観察「不具合内容」に同期
@@ -1037,11 +1226,11 @@ function saveItems(next){
   }, function(e){
     // POSTが失敗した場合はチャンク送信にフォールバック
     console.warn('POST失敗、チャンク送信にフォールバック:', e.message);
-    saveItemsChunked(mid, next, function(){
+    sendItemsChunked(mid, next, function(){
       STATE.sync = { state:'editing', message:'保存しました', at:timeStr() }; updateSyncBar();
     }, function(e2){
       STATE.sync = { state:'error', message:'保存失敗: '+e2.message+' (データ保護のため画面の項目は維持されています。再度お試しください)', at:null }; updateSyncBar();
-    });
+    }, '保存中(分割送信)...');
   });
 }
 
@@ -1215,7 +1404,9 @@ function initializeSheet(){
 }
 
 // 指定機械の項目をチャンク分割送信する汎用関数
-function sendItemsChunked(mid, items, onDone, onErr){
+// label: 進捗表示の文言(省略時は初期化用の「初期化中...」)
+function sendItemsChunked(mid, items, onDone, onErr, label){
+  label = label || '初期化中...';
   var chunkSize = 5;
   var chunks = [];
   for(var i=0;i<items.length;i+=chunkSize){ chunks.push(items.slice(i, i+chunkSize)); }
@@ -1226,7 +1417,7 @@ function sendItemsChunked(mid, items, onDone, onErr){
     var ci = idx;
     callGAS('saveItemsChunk', { machineId: mid, items: chunks[ci], chunkIndex: ci, isLast: (ci===chunks.length-1) }, function(){
       idx++;
-      STATE.sync = { state:'syncing', message:'初期化中... '+mid+' ('+idx+'/'+chunks.length+')', at:null }; updateSyncBar();
+      STATE.sync = { state:'syncing', message:label+' '+mid+' ('+idx+'/'+chunks.length+')', at:null }; updateSyncBar();
       step();
     }, function(e){ onErr && onErr(e); });
   }
@@ -1354,7 +1545,7 @@ function updateMeta(field, value){
 }
 
 // ============================================================
-// 点検者・確認者の名簿(NID・仕込み共通。スプレッドシートに保存)
+// 点検者・確認者の名簿(全ライン共通。スプレッドシートに保存)
 // ============================================================
 function addStaff(){
   if(!STATE.editMode) return;
@@ -1387,10 +1578,262 @@ function saveStaffNames(names){
     STATE.sync = { state:'error', message:'名簿の保存に失敗: '+e.message, at:null }; updateSyncBar();
   });
 }
+
+// ============================================================
+// 品種リスト(ラインごと。スプレッドシートの「品種リスト」に保存)
+// ============================================================
+function addProduct(){
+  if(!STATE.editMode) return;
+  var inp = el('new-product');
+  if(!inp) return;
+  var name = (inp.value||'').trim();
+  if(!name){ return; }
+  if(name.indexOf(PRODUCT_SEP) >= 0){ alert('品種名に「'+PRODUCT_SEP+'」は使えません(切り替えの区切りに使うため)。'); return; }
+  var names = getProducts().slice();
+  if(names.indexOf(name) >= 0){ alert('「'+name+'」は既に登録されています。'); return; }
+  names.push(name);
+  STATE.allProducts[STATE.machineId] = names;
+  inp.value = '';
+  editProductList(STATE.machineId, 'add', name);
+  render();
+}
+function deleteProduct(name){
+  if(!STATE.editMode) return;
+  if(!confirm('「'+name+'」を'+getMachine().name+'の品種リストから削除しますか?\n(過去の点検記録に既に入力された品種はそのまま残ります)')) return;
+  var names = getProducts().filter(function(n){ return n !== name; });
+  STATE.allProducts[STATE.machineId] = names;
+  editProductList(STATE.machineId, 'remove', name);
+  render();
+}
+// 送信待ち・送信済みで未反映の品種リストの追加・削除(操作した順)。{ mid, op, name, done, doneSeq }
+// サーバの結果や読み込み結果に重ねて、操作したばかりの品種が一時的に消えたり戻ったりしないようにする
+var productPending = [];
+function applyProductOps(mid, list){
+  var out = list.slice();
+  productPending.forEach(function(p){
+    if(p.mid !== mid) return;
+    if(p.op === 'add'){ if(out.indexOf(p.name) < 0) out.push(p.name); }
+    else out = out.filter(function(n){ return n !== p.name; });
+  });
+  return out;
+}
+function prunePendingProducts(seq){
+  productPending = productPending.filter(function(p){ return !(p.done && p.doneSeq < seq); });
+}
+// 品種リストの1件追加・削除を送る。サーバは「今のリスト」に当てて結果を返すので、
+// 別の端末が先に足した品種を、こちらの古いリストで消してしまうことがない
+function editProductList(mid, op, name){
+  if(!isGasConfigured){ return; }
+  var p = { mid: mid, op: op, name: name, done: false };
+  productPending.push(p);
+  enqueueSave({ machineId: mid, op: op, name: name }, 'editProduct', { done: function(ok, res){
+    var before = (STATE.allProducts[mid] || []).join('\n');
+    if(ok && res && res.products){
+      p.done = true; p.doneSeq = loadSeq;
+      STATE.allProducts[mid] = applyProductOps(mid, res.products);
+    } else {
+      // 保存できなかった操作は取り消して知らせる
+      productPending = productPending.filter(function(x){ return x !== p; });
+      var list = (STATE.allProducts[mid] || []).slice();
+      if(op === 'add') list = list.filter(function(n){ return n !== name; });
+      else if(list.indexOf(name) < 0) list.push(name);
+      STATE.allProducts[mid] = list;
+    }
+    // 他の端末の変更が混ざっていた・取り消したときだけ、品種の表示を更新する
+    if((STATE.allProducts[mid] || []).join('\n') !== before) refreshProductViews();
+    if(!(ok && res && res.products)) alert(MACHINES[mid].name+'の品種「'+name+'」の'+(op==='add'?'登録':'削除')+'を保存できませんでした。\n通信状態を確認して、もう一度操作してください。');
+  }});
+}
+
+// ============================================================
+// 引き継ぎメモ(1件の書き込みごとに時刻・記入者を残す。ラインごとの「メモ」シートに保存)
+// ============================================================
+// 送信待ち・送信済みで未反映のメモ。id → { mid, op:'save'|'delete', memo, done, doneSeq, failed }
+// 「最新を取得」と保存が行き違っても、書いたばかりのメモが消えたり、消したメモが戻ったりしないようにする。
+// 送信が終わった分(done)も、送信後に始めた読み込みが反映されるまでは残しておく(prunePendingMemos)。
+var memoPending = {};
+var loadSeq = 0;        // refresh() で読み込みを始めた回数
+var lastAppliedSeq = 0; // 画面に反映した読み込みの番号(これより古い結果が後から届いたら捨てる)
+function mergePendingMemos(mid, list){
+  var out = list.slice();
+  for(var id in memoPending){
+    var p = memoPending[id];
+    if(p.mid !== mid) continue;
+    // 送信は失敗扱いでも実はシートに届いていた(応答だけ失われた)メモは、保存済みとして扱う
+    if(p.op === 'save' && p.failed && list.some(function(m){ return m.id === id; })){
+      p.memo._failed = false;
+      delete memoPending[id];
+      continue;
+    }
+    out = out.filter(function(m){ return m.id !== id; });
+    if(p.op === 'save') out.push(p.memo);
+  }
+  return out;
+}
+// 読み込み(seq回目)の結果を反映したあとに呼ぶ: 送信が終わってから始めた読み込みなら、もう結果に入っている
+function prunePendingMemos(seq){
+  for(var id in memoPending){
+    var p = memoPending[id];
+    if(p.done && p.doneSeq < seq) delete memoPending[id];
+  }
+}
+// メモを送る(追加・再送とも同じメモ・同じidで送るので、二重に届いても1件のまま)
+function sendMemo(mid, memo){
+  if(!isGasConfigured) return;
+  var p = memoPending[memo.id] = { mid: mid, op: 'save', memo: memo, done: false, failed: false };
+  var payload = { id: memo.id, date: memo.date, at: memo.at, author: memo.author, text: memo.text };
+  enqueueSave({ machineId: mid, memo: payload }, 'saveMemo', { post: true, done: function(ok){
+    if(memoPending[memo.id] !== p) return;   // その間に削除された
+    if(ok){ p.done = true; p.doneSeq = loadSeq; memo._failed = false; }
+    else { p.failed = true; memoSaveFailed(mid, memo); }
+  }});
+}
+function addMemo(){
+  var ta = el('memo-text');
+  var text = ta ? ta.value.replace(/\s+$/, '') : '';
+  if(!text.trim()){ alert('メモの内容を入力してください'); return; }
+  var sel = el('memo-author');
+  var mid = STATE.machineId;
+  var memo = {
+    id: 'memo_' + mid + '_' + Date.now() + '_' + Math.floor(Math.random()*1000),
+    date: STATE.date,           // どの日のメモか(点検実施で開いている日)
+    at: Date.now(),             // 書いた日時
+    author: sel ? sel.value : '',
+    text: text
+  };
+  STATE.allMemos[mid] = getMemos(mid).concat([memo]);
+  STATE.memoDraft = '';
+  STATE.memoWriting = false;
+  sendMemo(mid, memo);
+  render();
+}
+// 保存に失敗したメモは、書いたライン・日のメモ欄に「未保存」として残し、「再送」で送り直せるようにする
+function memoSaveFailed(mid, memo){
+  memo._failed = true;
+  refreshMemoViews();
+  alert('メモを保存できませんでした(' + MACHINES[mid].name + ' ' + mdLabel(memo.date) + ')。\n通信状態を確認して、そのメモの「再送」を押してください。\n(メモは画面に「未保存」として残っています。ページを閉じると消えます)');
+}
+function retryMemo(mid, memoId){
+  var memo = getMemos(mid).filter(function(m){ return m.id === memoId; })[0];
+  if(!memo) return;
+  memo._failed = false;
+  sendMemo(mid, memo);
+  render();
+}
+function deleteMemo(mid, memoId){
+  var target = getMemos(mid).filter(function(m){ return m.id === memoId; })[0];
+  if(!target) return;
+  var head = target.text.length > 40 ? target.text.slice(0, 40) + '…' : target.text;
+  if(!confirm('このメモを削除しますか?\n「' + head + '」')) return;
+  STATE.allMemos[mid] = getMemos(mid).filter(function(m){ return m.id !== memoId; });
+  if(isGasConfigured){
+    var p = memoPending[memoId] = { mid: mid, op: 'delete', done: false };
+    enqueueSave({ machineId: mid, memoId: memoId }, 'deleteMemo', { done: function(ok){
+      if(memoPending[memoId] !== p) return;
+      if(ok){ p.done = true; p.doneSeq = loadSeq; }
+      else delete memoPending[memoId];       // 消せなかったので、次の読み込みでそのまま戻す
+    }});
+  }
+  render();
+}
+// メモを日付・書いた時刻の古い順に並べる
+function memoSortAsc(a, b){
+  if(a.date !== b.date) return a.date < b.date ? -1 : 1;
+  if((a.at||0) !== (b.at||0)) return (a.at||0) - (b.at||0);
+  return a.id < b.id ? -1 : a.id > b.id ? 1 : 0;
+}
+// 書いた時刻(メモの日と違う日に書いたときは日付も付ける)
+function memoTimeLabel(m){
+  if(!m.at) return '';
+  var d = new Date(m.at);
+  var t = pad(d.getHours()) + ':' + pad(d.getMinutes());
+  var ds = d.getFullYear() + '-' + pad(d.getMonth()+1) + '-' + pad(d.getDate());
+  return ds === m.date ? t : (d.getMonth()+1) + '/' + d.getDate() + ' ' + t + ' 記入';
+}
+// 「10/13(火)」の形の日付
+function mdLabel(dateStr){
+  var p = String(dateStr||'').split('-');
+  if(p.length < 3) return esc(dateStr);
+  var wd = '日月火水木金土'.charAt(new Date(Number(p[0]), Number(p[1])-1, Number(p[2])).getDay());
+  return Number(p[1]) + '/' + Number(p[2]) + '(' + wd + ')';
+}
+// 検索用の正規化: 全角半角(NFKC)・大文字小文字・カタカナとひらがなの違いをなくす
+function normSearch(s){
+  s = String(s == null ? '' : s);
+  try { s = s.normalize('NFKC'); } catch(e){}
+  return s.toLowerCase().replace(/[ァ-ヶ]/g, function(c){ return String.fromCharCode(c.charCodeAt(0) - 0x60); });
+}
+function memoTerms(q){ return normSearch(q).split(/\s+/).filter(function(t){ return t; }); }
+// 検索語に一致する部分を <mark> で囲んだHTML(照合は normSearch で正規化して行う)
+function highlightHTML(text, terms){
+  text = String(text == null ? '' : text);
+  if(!terms.length) return esc(text);
+  // 半角カナの濁点・半濁点(ﾞﾟ)は前の文字とまとめる(「ﾊﾞ」→「バ」と1文字で照合するため)
+  var chars = [];
+  Array.from(text).forEach(function(c){
+    if(chars.length && /[\uFF9E\uFF9F\u3099\u309A]/.test(c)) chars[chars.length-1] += c; else chars.push(c);
+  });
+  var norm = '', map = [];
+  chars.forEach(function(c, i){ var n = normSearch(c); for(var k=0;k<n.length;k++) map.push(i); norm += n; });
+  var marked = chars.map(function(){ return false; });
+  terms.forEach(function(t){
+    var from = 0, p;
+    while((p = norm.indexOf(t, from)) >= 0){
+      for(var k=p; k<p+t.length; k++) marked[map[k]] = true;
+      from = p + 1;
+    }
+  });
+  var h = '', open = false;
+  chars.forEach(function(c, i){
+    if(marked[i] && !open){ h += '<mark>'; open = true; }
+    if(!marked[i] && open){ h += '</mark>'; open = false; }
+    h += esc(c);
+  });
+  if(open) h += '</mark>';
+  return h;
+}
+// メモ一覧に出すメモ(ライン・期間・検索語で絞り込み、新しい順)
+function filteredMemos(){
+  var mids = STATE.memoLine === 'all' ? ['g2','g3','g4','g5'] : [STATE.machineId];
+  var from = '', to = '';
+  var now = new Date();
+  if(STATE.memoPeriod === 'month'){
+    from = currentMonthStr() + '-01';
+    to = currentMonthStr() + '-' + pad(daysInMonth(currentMonthStr()));
+  } else if(STATE.memoPeriod === '3m'){
+    // 3か月前の同じ日(その月に無い日なら月末。5/31 → 2/28)
+    var y = now.getFullYear(), mo = now.getMonth() - 3;
+    var d = new Date(y, mo, Math.min(now.getDate(), new Date(y, mo + 1, 0).getDate()));
+    from = d.getFullYear() + '-' + pad(d.getMonth()+1) + '-' + pad(d.getDate());
+  }
+  var terms = memoTerms(STATE.memoQuery);
+  var list = [];
+  mids.forEach(function(mid){
+    getMemos(mid).forEach(function(m){
+      if(from && m.date < from) return;
+      if(to && m.date > to) return;
+      if(terms.length){
+        var hay = normSearch(m.text + ' ' + (m.author||''));
+        for(var i=0;i<terms.length;i++){ if(hay.indexOf(terms[i]) < 0) return; }
+      }
+      list.push({ mid: mid, m: m });
+    });
+  });
+  list.sort(function(a, b){ return memoSortAsc(b.m, a.m); });
+  return list;
+}
+// メモ一覧から、その日の点検画面を開く(別ラインならラインも切り替える)
+function openMemoDay(mid, date){
+  flushSave();
+  STATE.machineId = mid; STATE.editingItem = null; STATE.checkFilter = 'all';
+  STATE.date = date; STATE.tab = 'check'; STATE.memoAuthor = null;
+  render();
+  window.scrollTo(0, 0);
+}
 function clearDay(){
   if(!STATE.editMode) return;
-  if(!confirm(STATE.date+'の点検記録を削除しますか?')) return;
-  var empty = { results:{}, notes:{}, inspector:'', checker:'' };
+  if(!confirm(STATE.date+'の点検記録を削除しますか?\n(判定・備考・点検者・確認者・品種を削除します。引き継ぎメモは残ります)')) return;
+  var empty = { results:{}, notes:{}, inspector:'', checker:'', product:'' };
   storeRecord(STATE.date, empty);
   // 保存待ちを取り消して、即座に削除を送信
   if(saveTimer){ clearTimeout(saveTimer); saveTimer = null; }
@@ -1415,6 +1858,7 @@ function scheduleSave(dateKey, data){
   pendingData = { machineId: STATE.machineId, date: dateKey, data: data };
   if(saveTimer) clearTimeout(saveTimer);
   saveTimer = setTimeout(function(){
+    saveTimer = null; // 発火したら空に戻す(残したままだと「保存待ち」と判定され続ける)
     if(!pendingData) return;
     var sending = pendingData;
     pendingData = null;
@@ -1427,13 +1871,19 @@ var issueSaveTimers = {};
 function scheduleIssueSave(issue){
   if(!isGasConfigured) return;
   var id = issue.id;
+  var mid = STATE.machineId; // 予約した時点のライン(待機中にラインを切り替えても別ラインへ保存しない)
   STATE.sync = { state:'syncing', message:'保存待機中...', at:null }; updateSyncBar();
   if(issueSaveTimers[id]) clearTimeout(issueSaveTimers[id]);
   issueSaveTimers[id] = setTimeout(function(){
     delete issueSaveTimers[id];
     var toSave = {}; for(var p in issue){ if(p!=='_unsaved') toSave[p]=issue[p]; }
-    enqueueSave({ machineId: STATE.machineId, issue: toSave }, 'saveIssue');
+    enqueueSave({ machineId: mid, issue: toSave }, 'saveIssue');
   }, 800);
+}
+// 待機中の保存を取り消す(完了・削除の直前に呼ぶ)。取り消さないと、完了・削除で行を移した後に
+// 待機していた保存が走り、不具合シートに行が追記されてしまう。完了の送信内容には最新の編集が含まれる。
+function cancelIssueSave(id){
+  if(issueSaveTimers[id]){ clearTimeout(issueSaveTimers[id]); delete issueSaveTimers[id]; }
 }
 function clone(o){ return JSON.parse(JSON.stringify(o)); }
 
@@ -1545,9 +1995,9 @@ function confirmLeaveCheck(){
   }
   return true;
 }
-function switchMachine(mid){ if(!confirmLeaveCheck()) return; flushSave(); STATE.machineId=mid; STATE.editingItem=null; STATE.checkFilter='all'; render(); }
-function switchTab(t){ if(t!=='check' && !confirmLeaveCheck()) return; flushSave(); STATE.tab=t; if(t==='issues') syncIssuesFromRecords(); if(t==='watch'){ syncWatchesFromRecords(); escalateWatchToNG(); } render(); }
-function openDate(d){ flushSave(); STATE.date=d; STATE.tab='check'; render(); }
+function switchMachine(mid){ if(!confirmLeaveCheck()) return; flushSave(); STATE.machineId=mid; STATE.editingItem=null; STATE.checkFilter='all'; STATE.memoAuthor=null; render(); }
+function switchTab(t){ if(t!=='check' && !confirmLeaveCheck()) return; flushSave(); STATE.tab=t; if(t==='issues') syncIssuesFromRecords(); if(t==='watch'){ discardCorrectedWatches(); syncWatchesFromRecords(); escalateWatchToNG(); } render(); }
+function openDate(d){ flushSave(); STATE.date=d; STATE.tab='check'; STATE.memoAuthor=null; render(); }
 
 // ============================================================
 // 印刷
@@ -1793,6 +2243,95 @@ function assigneeSelectHTML(issueId, current){
   return h;
 }
 
+// 品種: 1日に複数(途中で切り替えた順)。記録には「A品→B品」の形で保存する
+var PRODUCT_SEP = '→';
+function splitProducts(str){
+  var list = String(str||'').split(PRODUCT_SEP).map(function(x){ return x.trim(); }).filter(function(x){ return x; });
+  return collapseRepeats(list);
+}
+// 隣り合う同じ品種をまとめる(同じ品種への「切り替え」は無いので)
+function collapseRepeats(list){ return list.filter(function(x, i){ return i === 0 || x !== list[i-1]; }); }
+function joinProducts(list){ return list.join(PRODUCT_SEP); }
+// 品種の欄: 選んだ品種を切替順に並べ(編集モードでは × で外せる)、横の選択肢から追加する
+function productPickerHTML(current, dis){
+  var chosen = splitProducts(current);
+  var h = '<div class="prod-picker" id="product-picker">';
+  chosen.forEach(function(n, i){
+    if(i>0) h += '<span class="prod-arrow">→</span>';
+    h += '<span class="prod-chip">'+esc(n);
+    if(STATE.editMode) h += '<button class="prod-chip-x" data-prod-remove="'+i+'" title="外す">×</button>';
+    h += '</span>';
+  });
+  var last = chosen[chosen.length-1];
+  var rest = getProducts().filter(function(n){ return n !== last; });
+  h += '<select id="inp-product-add" '+dis+'>';
+  h += '<option value="">'+(chosen.length ? '＋ 切替を追加' : (getProducts().length ? '(未選択)' : '(項目管理で品種を登録)'))+'</option>';
+  rest.forEach(function(n){ h += '<option value="'+esc(n)+'">'+esc(n)+'</option>'; });
+  h += '</select></div>';
+  return h;
+}
+function addDayProduct(name){
+  if(!STATE.editMode || !name) return;
+  var list = splitProducts(getCurrent().product);
+  if(list[list.length-1] === name) return;   // 直前と同じ品種は続けて入れない(前の品種に戻るのは可)
+  list.push(name);
+  updateMeta('product', joinProducts(list));
+  render();
+}
+function removeDayProduct(idx){
+  if(!STATE.editMode) return;
+  var list = splitProducts(getCurrent().product);
+  list.splice(idx, 1);
+  updateMeta('product', joinProducts(collapseRepeats(list)));
+  render();
+}
+
+// 引き継ぎメモ(点検実施の画面の上部)
+function memoItemHTML(m, prev){
+  var h = '<div class="memo-item'+(prev?' prev':'')+(m._failed?' failed':'')+'">';
+  h += '<div class="memo-meta">'+esc(memoTimeLabel(m))+' '+esc(m.author||'—')+'</div>';
+  h += '<div class="memo-text">'+(m._failed?'<span class="memo-unsaved">未保存</span>':'')+esc(m.text)+'</div>';
+  if(!prev){
+    h += '<span class="memo-btns">';
+    if(m._failed) h += '<button class="btn sm primary" data-memo-retry="'+STATE.machineId+'|'+esc(m.id)+'">再送</button>';
+    h += '<button class="btn sm danger" data-memo-del="'+STATE.machineId+'|'+esc(m.id)+'" title="削除" style="width:36px;padding:0">🗑</button>';
+    h += '</span>';
+  }
+  h += '</div>';
+  return h;
+}
+function renderMemoBox(cur){
+  var memos = getMemos();
+  var today = memos.filter(function(m){ return m.date === STATE.date; }).sort(memoSortAsc);
+  // 前回のメモ: この日より前で、メモがある一番新しい日のもの
+  var prevDate = '';
+  memos.forEach(function(m){ if(m.date < STATE.date && m.date > prevDate) prevDate = m.date; });
+  var prev = prevDate ? memos.filter(function(m){ return m.date === prevDate; }).sort(memoSortAsc) : [];
+  var h = '<div class="memo-box no-print" id="memo-box">';
+  h += '<div class="memo-head"><span class="memo-title">📝 引き継ぎメモ</span>';
+  h += '<button class="btn sm" id="btn-memo-list">メモ一覧 →</button></div>';
+  if(prev.length){
+    h += '<div class="memo-sub">前回のメモ('+mdLabel(prevDate)+')</div>';
+    prev.forEach(function(m){ h += memoItemHTML(m, true); });
+  }
+  h += '<div class="memo-sub">この日のメモ('+mdLabel(STATE.date)+')'+(today.length?' '+today.length+'件':'')+'</div>';
+  if(today.length===0 && !STATE.memoWriting) h += '<div class="memo-empty">まだありません</div>';
+  today.forEach(function(m){ h += memoItemHTML(m, false); });
+  if(STATE.memoWriting || STATE.memoDraft){
+    var author = STATE.memoAuthor != null ? STATE.memoAuthor : (cur.inspector || '');
+    h += '<div class="memo-input">';
+    h += '<textarea id="memo-text" maxlength="500" placeholder="気づき・注意点などを記入(500文字まで)">'+esc(STATE.memoDraft||'')+'</textarea>';
+    h += '<div class="memo-input-row"><label for="memo-author">記入者</label>'+staffSelectHTML('memo-author', author, '');
+    h += '<button class="btn sm" id="btn-memo-cancel">キャンセル</button>';
+    h += '<button class="btn sm primary" id="btn-memo-add">＋ 追加</button></div>';
+    h += '</div>';
+  } else {
+    h += '<div style="margin-top:8px"><button class="btn sm primary" id="btn-memo-write">＋ メモを書く</button></div>';
+  }
+  h += '</div>';
+  return h;
+}
+
 function renderCheck(){
   var cur = getCurrent();
   var stats = getStats();
@@ -1803,7 +2342,10 @@ function renderCheck(){
   h += '<div class="field"><label>日付</label><input type="date" id="inp-date" value="'+STATE.date+'"></div>';
   h += '<div class="field"><label>点検者</label>'+staffSelectHTML('inp-inspector', cur.inspector, dis)+'</div>';
   h += '<div class="field"><label>確認者</label>'+staffSelectHTML('inp-checker', cur.checker, dis)+'</div>';
+  h += '<div class="field field-product"><label>品種(切り替えた順)</label>'+productPickerHTML(cur.product, dis)+'</div>';
   h += '</div>';
+
+  h += renderMemoBox(cur);
 
   h += '<div class="summary no-print" id="summary-box">';
   h += sc('点検済み', stats.done+' / '+stats.total, '');
@@ -1986,7 +2528,7 @@ function renderWatches(){
 
   var h = '<div style="padding:14px;background:var(--c-warn-bg);border:1px solid #FAC775;border-radius:var(--r-lg);margin-bottom:14px;font-size:14px;color:var(--c-text2)">';
   h += '<b style="color:var(--c-warn)">'+esc(m.name)+' 経過観察リスト</b><br>';
-  h += '点検で△がついた項目が自動で登録されます。「完了」にすると一覧から消え、スプレッドシートの「経過観察完了済み」シートへ移動します。';
+  h += '点検で△がついた項目が自動で登録されます。「完了」にすると一覧から消え、スプレッドシートの「経過観察完了」シートへ移動します。';
   h += '</div>';
 
   if(open.length===0){
@@ -2064,20 +2606,131 @@ function renderHistory(){
   var m = getMachine();
   var records = getRecords();
   var dl = getDateList();
-  var h = '<div style="padding:14px;background:var(--c-bg2);border-radius:var(--r-lg);margin-bottom:14px;font-size:14px;color:var(--c-text2)">'+
+  var view = STATE.historyView === 'memos' ? 'memos' : 'dates';
+  var h = '<div class="no-print" style="margin-bottom:12px"><div class="filter-group">';
+  h += '<button class="filter-btn '+(view==='dates'?'on':'')+'" data-hview="dates">📅 日付一覧 ('+dl.length+')</button>';
+  h += '<button class="filter-btn '+(view==='memos'?'on':'')+'" data-hview="memos">📝 メモ一覧 ('+getMemos().length+')</button>';
+  h += '</div></div>';
+  if(view === 'memos') return h + renderMemoList();
+  h += '<div style="padding:14px;background:var(--c-bg2);border-radius:var(--r-lg);margin-bottom:14px;font-size:14px;color:var(--c-text2)">'+
     esc(m.name)+'の履歴。「最新を取得」で他の人の入力を反映、「シートを開く」で生データを直接確認できます。</div>';
   if(dl.length===0){ h += '<div class="empty">まだ点検記録がありません</div>'; return h; }
+  // 日付ごとのメモ件数
+  var memoCount = {};
+  getMemos().forEach(function(mm){ memoCount[mm.date] = (memoCount[mm.date]||0) + 1; });
   dl.forEach(function(d){
-    var r = records[d]; var ok=0,ng=0;
-    for(var k in r.results){ if(r.results[k]==='ok')ok++; else if(r.results[k]==='ng')ng++; }
+    var r = records[d]; var ok=0,tri=0,ng=0;
+    for(var k in r.results){ if(r.results[k]==='ok')ok++; else if(r.results[k]==='tri')tri++; else if(r.results[k]==='ng')ng++; }
+    var prods = splitProducts(r.product);
     h += '<div class="hist-row">';
-    h += '<div><div style="font-size:15px;font-weight:500">'+d+'</div><div style="font-size:13px;color:var(--c-text2);margin-top:2px">点検者: '+esc(r.inspector||'—')+' / 確認者: '+esc(r.checker||'—')+'</div></div>';
-    h += '<div><span class="pill pill-ok">○ '+ok+'</span> &nbsp; <span class="pill pill-ng">× '+ng+'</span></div>';
-    h += '<div style="color:var(--c-text2);font-size:13px">'+(ok+ng)+'/'+getItems().length+' 完了</div>';
+    h += '<div><div style="font-size:15px;font-weight:500">'+d+(memoCount[d]?' <span class="memo-line" title="この日のメモ">📝 '+memoCount[d]+'</span>':'')+'</div><div style="font-size:13px;color:var(--c-text2);margin-top:2px">点検者: '+esc(r.inspector||'—')+' / 確認者: '+esc(r.checker||'—')+'</div>'+
+      (prods.length?'<div style="font-size:13px;color:var(--c-text2);margin-top:2px">品種: '+esc(prods.join(' → '))+'</div>':'')+'</div>';
+    h += '<div><span class="pill pill-ok">○ '+ok+'</span> &nbsp; <span class="pill pill-tri">△ '+tri+'</span> &nbsp; <span class="pill pill-ng">× '+ng+'</span></div>';
+    h += '<div style="color:var(--c-text2);font-size:13px">'+(ok+tri+ng)+'/'+getItems().length+' 完了</div>';
     h += '<div><button class="btn sm" data-opendate="'+d+'">👁 開く</button></div>';
     h += '</div>';
   });
   return h;
+}
+
+// 項目管理の品種リストの札(この部分だけを描き直せるように id を付ける)
+function productChipsHTML(dis){
+  var prods = getProducts();
+  var h = '<div id="product-chips">';
+  if(prods.length===0){
+    h += '<div style="font-size:13px;color:var(--c-text2);margin-bottom:10px">まだ品種が登録されていません。下の欄から追加してください。</div>';
+  } else {
+    h += '<div style="display:flex;flex-wrap:wrap;gap:8px;margin-bottom:10px">';
+    prods.forEach(function(n){
+      h += '<span style="display:inline-flex;align-items:center;gap:6px;background:var(--c-bg);border:1px solid var(--c-bd);border-radius:999px;padding:6px 6px 6px 14px;font-size:14px">';
+      h += esc(n);
+      h += '<button class="btn sm danger" data-delproduct="'+esc(n)+'" '+dis+' style="width:28px;height:28px;padding:0;border-radius:50%;flex-shrink:0">×</button>';
+      h += '</span>';
+    });
+    h += '</div>';
+  }
+  h += '</div>';
+  return h;
+}
+// 画面全体を描き直さずに、品種・メモの表示だけを更新する
+// (保存の結果は後から届くので、全体を描き直すと入力途中の欄や編集中の画面が消えてしまう)
+function replaceById(id, html){
+  var cur = el(id);
+  if(!cur) return;
+  var t = document.createElement('div');
+  t.innerHTML = html;
+  cur.parentNode.replaceChild(t.firstChild, cur);
+}
+function refreshProductViews(){
+  var dis = STATE.editMode ? '' : 'disabled';
+  replaceById('product-picker', productPickerHTML(getCurrent().product, dis));
+  replaceById('product-chips', productChipsHTML(dis));
+  attachHandlers();
+}
+function refreshMemoViews(){
+  replaceById('memo-box', renderMemoBox(getCurrent()));
+  var res = el('memo-results');
+  if(res) res.innerHTML = memoResultsHTML();
+  attachHandlers();
+}
+
+// メモ一覧(履歴タブ): 検索語・ライン・期間で絞り込み、新しい順に表示
+function renderMemoList(){
+  var h = '<div class="memo-controls no-print">';
+  h += '<input type="search" id="memo-q" placeholder="🔍 メモを検索(例: シール 温度)" value="'+esc(STATE.memoQuery)+'">';
+  h += '<select id="memo-line">';
+  h += '<option value="this"'+(STATE.memoLine!=='all'?' selected':'')+'>'+esc(getMachine().name)+'</option>';
+  h += '<option value="all"'+(STATE.memoLine==='all'?' selected':'')+'>全ライン</option></select>';
+  h += '<select id="memo-period">';
+  [['all','全期間'],['month','今月'],['3m','直近3か月']].forEach(function(o){
+    h += '<option value="'+o[0]+'"'+(STATE.memoPeriod===o[0]?' selected':'')+'>'+o[1]+'</option>';
+  });
+  h += '</select></div>';
+  h += '<div id="memo-results">'+memoResultsHTML()+'</div>';
+  return h;
+}
+function memoResultsHTML(){
+  var list = filteredMemos();
+  var terms = memoTerms(STATE.memoQuery);
+  var h = '<div class="memo-count">'+(terms.length ? '「'+esc(STATE.memoQuery.trim())+'」を含むメモ ' : 'メモ ')+list.length+'件'+
+    (terms.length ? '<span style="margin-left:8px;color:var(--c-text3)">(全角・半角、ひらがな・カタカナの違いは区別しません)</span>' : '')+'</div>';
+  if(list.length === 0){
+    h += '<div class="empty">'+(terms.length ? '一致するメモはありません' : 'まだメモがありません。点検実施の「＋ メモを書く」から記入できます')+'</div>';
+    return h;
+  }
+  list.forEach(function(x){
+    var mm = x.m;
+    h += '<div class="memo-row">';
+    h += '<div class="memo-row-head"><b>'+mdLabel(mm.date)+'</b><span>'+esc(memoTimeLabel(mm))+'</span>';
+    if(STATE.memoLine === 'all') h += '<span class="memo-line">'+esc(MACHINES[x.mid].name)+'</span>';
+    h += '<span>'+highlightHTML(mm.author||'—', terms)+'</span>';
+    h += '<span class="memo-row-btns"><button class="btn sm" data-memo-open="'+x.mid+'|'+esc(mm.date)+'">この日を開く</button>';
+    h += '<button class="btn sm danger" data-memo-del="'+x.mid+'|'+esc(mm.id)+'" title="削除" style="width:36px;padding:0">🗑</button></span></div>';
+    h += '<div class="memo-row-text">'+(mm._failed?'<span class="memo-unsaved">未保存</span>':'')+highlightHTML(mm.text, terms)+'</div>';
+    h += '</div>';
+  });
+  return h;
+}
+// メモ一覧の結果部分だけ描き直す(検索欄の入力中にフォーカスが外れないように)
+function updateMemoResults(){
+  var box = el('memo-results');
+  if(!box) return;
+  box.innerHTML = memoResultsHTML();
+  attachMemoHandlers(box);
+}
+function attachMemoHandlers(scope){
+  var rts = scope.querySelectorAll('[data-memo-retry]');
+  for(var k=0;k<rts.length;k++){
+    rts[k].onclick = (function(v){ return function(){ var p = v.split('|'); retryMemo(p[0], p.slice(1).join('|')); }; })(rts[k].getAttribute('data-memo-retry'));
+  }
+  var dels = scope.querySelectorAll('[data-memo-del]');
+  for(var i=0;i<dels.length;i++){
+    dels[i].onclick = (function(v){ return function(){ var p = v.split('|'); deleteMemo(p[0], p.slice(1).join('|')); }; })(dels[i].getAttribute('data-memo-del'));
+  }
+  var opens = scope.querySelectorAll('[data-memo-open]');
+  for(var j=0;j<opens.length;j++){
+    opens[j].onclick = (function(v){ return function(){ var p = v.split('|'); openMemoDay(p[0], p[1]); }; })(opens[j].getAttribute('data-memo-open'));
+  }
 }
 
 function renderItems(){
@@ -2087,7 +2740,7 @@ function renderItems(){
   var dis = ed?'':'disabled';
   var h = '';
 
-  // 点検者・確認者の名簿管理(NID・仕込み共通)
+  // 点検者・確認者の名簿管理(全ライン共通)
   h += '<div style="padding:14px;background:var(--c-bg2);border:1px solid var(--c-bd);border-radius:var(--r-lg);margin-bottom:14px">';
   h += '<div style="font-size:14px;font-weight:500;margin-bottom:10px">👤 点検者・確認者の名簿 '+(ed?'':'<span style="color:var(--c-warn);font-weight:400">(編集モードをONにしてください)</span>')+'</div>';
   var names = STATE.staffNames || [];
@@ -2107,7 +2760,18 @@ function renderItems(){
   h += '<input id="new-staff" placeholder="氏名を入力" '+dis+' style="flex:1;height:44px;padding:0 12px;border:1px solid var(--c-bd2);border-radius:var(--r-md);background:var(--c-bg);color:var(--c-text);font-family:var(--font);font-size:15px;box-sizing:border-box">';
   h += '<button class="btn sm primary" id="btn-addstaff" '+dis+'>+ 追加</button>';
   h += '</div>';
-  h += '<div style="font-size:12px;color:var(--c-text2);margin-top:6px">※ここで登録した名前が、点検者・確認者の選択肢になります(NID・仕込み共通)。</div>';
+  h += '<div style="font-size:12px;color:var(--c-text2);margin-top:6px">※ここで登録した名前が、点検者・確認者の選択肢になります(全ライン共通)。</div>';
+  h += '</div>';
+
+  // 品種リスト(このラインだけ)
+  h += '<div style="padding:14px;background:var(--c-bg2);border:1px solid var(--c-bd);border-radius:var(--r-lg);margin-bottom:14px">';
+  h += '<div style="font-size:14px;font-weight:500;margin-bottom:10px">🏷 '+esc(m.name)+'の品種リスト '+(ed?'':'<span style="color:var(--c-warn);font-weight:400">(編集モードをONにしてください)</span>')+'</div>';
+  h += productChipsHTML(dis);
+  h += '<div style="display:flex;gap:8px">';
+  h += '<input id="new-product" placeholder="品種名を入力" '+dis+' style="flex:1;height:44px;padding:0 12px;border:1px solid var(--c-bd2);border-radius:var(--r-md);background:var(--c-bg);color:var(--c-text);font-family:var(--font);font-size:15px;box-sizing:border-box">';
+  h += '<button class="btn sm primary" id="btn-addproduct" '+dis+'>+ 追加</button>';
+  h += '</div>';
+  h += '<div style="font-size:12px;color:var(--c-text2);margin-top:6px">※ここで登録した品種が、'+esc(m.name)+'の点検実施の「品種」の選択肢になります(ラインごと)。1日に複数選べます(切り替えた順)。</div>';
   h += '</div>';
 
   h += '<div style="padding:14px;background:var(--c-info-bg);border-radius:var(--r-lg);margin-bottom:14px">';
@@ -2919,7 +3583,7 @@ function renderMonthly(){
   var xlsxOk = (typeof XLSX !== 'undefined');
   var h = '<div class="print-config no-print">';
   h += '<h3 style="margin:0 0 12px;color:var(--c-info)">📅 月次まとめ出力</h3>';
-  h += '<p style="margin:0 0 14px;font-size:14px;color:var(--c-text2)">印刷: <b>'+esc(m.name)+' → '+m.paperSize+'サイズ横向き</b>。点検表の下に<b>未解決の不具合一覧</b>(繰り越し含む)も印刷されます。</p>';
+  h += '<p style="margin:0 0 14px;font-size:14px;color:var(--c-text2)">印刷: <b>'+esc(m.name)+' → '+m.paperSize+'サイズ横向き</b>。点検表の下に<b>未解決の不具合一覧</b>(繰り越し含む)と<b>その月の引き継ぎメモ</b>も印刷されます。</p>';
   h += '<div style="display:flex;gap:12px;align-items:flex-end;flex-wrap:wrap">';
   h += '<div class="field"><label style="font-size:13px;color:var(--c-text2);margin-bottom:4px;display:block">対象月</label>';
   h += '<input type="month" id="inp-month" value="'+STATE.printMonth+'" style="height:44px;padding:0 12px;font-size:15px;border:1px solid var(--c-bd2);border-radius:var(--r-md)"></div>';
@@ -2982,6 +3646,24 @@ function monthTableHTML(items, records, days, forPrint){
       }
       h += '<td></td></tr>';
     });
+    // 品種行(その月に品種の記録がある場合だけ)。日のマスには番号(①②…)だけを入れて列幅を崩さず、
+    // 品種名は表の最後の行に「① 品種名」の対応表として省略せずに載せる。切り替えた日は上から順に並べる
+    var prodNos = {}, prodOrder = [];
+    for(var d2=1; d2<=days; d2++){
+      var r2 = records[STATE.printMonth+'-'+pad(d2)];
+      splitProducts(r2 && r2.product).forEach(function(x){ if(!prodNos[x]){ prodOrder.push(x); prodNos[x] = prodOrder.length; } });
+    }
+    if(prodOrder.length){
+      var mark = function(n){ return n <= 20 ? String.fromCharCode(0x2460 + n - 1) : '('+n+')'; };
+      h += '<tr><td colspan="4" style="font-weight:bold;text-align:center;padding:0 6px">品種</td>';
+      for(var d3=1; d3<=days; d3++){
+        var r3 = records[STATE.printMonth+'-'+pad(d3)];
+        h += '<td style="font-size:7pt;text-align:center;line-height:1.1">'+splitProducts(r3 && r3.product).map(function(x){ return mark(prodNos[x]); }).join('<br>')+'</td>';
+      }
+      h += '<td></td></tr>';
+      h += '<tr><td colspan="'+(days+5)+'" style="font-size:7pt;padding:2px 6px;text-align:left">品種: '+
+        prodOrder.map(function(x, i){ return mark(i+1)+' '+esc(x); }).join('　')+'</td></tr>';
+    }
   }
   h += '</tbody></table>';
   return h;
@@ -3144,6 +3826,32 @@ function buildPrintArea(){
   }
   h += '</div>';
 
+  // 引き継ぎメモ(その月のぶん)
+  var monthMemos = getMemos().filter(function(mm){ return mm.date.slice(0,7) === STATE.printMonth; }).sort(memoSortAsc);
+  h += '<div style="margin-top:10px;page-break-inside:auto">';
+  h += '<div style="font-size:11pt;font-weight:bold;border-bottom:1.5px solid #000;padding-bottom:2px;margin-bottom:4px">引き継ぎメモ ('+monthMemos.length+'件)</div>';
+  if(monthMemos.length===0){
+    h += '<div style="font-size:9pt">この月のメモはありません。</div>';
+  } else {
+    h += '<table style="width:100%;border-collapse:collapse;font-size:8pt;color:#000;table-layout:fixed">';
+    h += '<thead><tr style="background:#fff2cc">';
+    h += '<th style="border:1px solid #333;padding:2px;width:48pt">日付</th>';
+    h += '<th style="border:1px solid #333;padding:2px;width:48pt">時刻</th>';
+    h += '<th style="border:1px solid #333;padding:2px;width:50pt">記入者</th>';
+    h += '<th style="border:1px solid #333;padding:2px">内容</th>';
+    h += '</tr></thead><tbody>';
+    monthMemos.forEach(function(mm){
+      h += '<tr>';
+      h += '<td style="border:1px solid #333;padding:2px;text-align:center">'+mdLabel(mm.date)+'</td>';
+      h += '<td style="border:1px solid #333;padding:2px;text-align:center;font-size:7pt">'+esc(memoTimeLabel(mm))+'</td>';
+      h += '<td style="border:1px solid #333;padding:2px;text-align:center;font-size:7pt">'+esc(mm.author||'')+'</td>';
+      h += '<td style="border:1px solid #333;padding:2px;font-size:7pt;white-space:pre-wrap;overflow-wrap:anywhere;word-break:break-all">'+esc(mm.text)+'</td>';
+      h += '</tr>';
+    });
+    h += '</tbody></table>';
+  }
+  h += '</div>';
+
   h += '</div>';
   el('print-area').innerHTML = h;
 }
@@ -3165,8 +3873,12 @@ function attachHandlers(){
   attachSyncHandlers();
 
   // 点検タブ
-  if(el('inp-date')) el('inp-date').onchange = function(){ flushSave(); STATE.date=this.value; render(); };
-  if(el('inp-inspector')) el('inp-inspector').onchange = function(){ updateMeta('inspector', this.value); };
+  if(el('inp-date')) el('inp-date').onchange = function(){ flushSave(); STATE.date=this.value; STATE.memoAuthor=null; render(); };
+  if(el('inp-inspector')) el('inp-inspector').onchange = function(){
+    updateMeta('inspector', this.value);
+    // メモの記入者をまだ選んでいなければ、選んだ点検者に合わせる
+    if(STATE.memoAuthor == null && el('memo-author')) el('memo-author').value = this.value;
+  };
   if(el('inp-checker')) el('inp-checker').onchange = function(){ updateMeta('checker', this.value); };
   var jbs = document.querySelectorAll('[data-result]');
   for(var i=0;i<jbs.length;i++){
@@ -3177,6 +3889,33 @@ function attachHandlers(){
     nts[i].onchange = (function(id){ return function(){ setNote(id, this.value); }; })(nts[i].getAttribute('data-note'));
   }
   if(el('btn-clearday')) el('btn-clearday').onclick = clearDay;
+
+  // 品種(点検実施): 追加・外す
+  if(el('inp-product-add')) el('inp-product-add').onchange = function(){ addDayProduct(this.value); };
+  var prs = document.querySelectorAll('[data-prod-remove]');
+  for(var i=0;i<prs.length;i++){ prs[i].onclick = (function(idx){ return function(){ removeDayProduct(idx); }; })(Number(prs[i].getAttribute('data-prod-remove'))); }
+
+  // 引き継ぎメモ(点検実施)
+  if(el('btn-memo-write')) el('btn-memo-write').onclick = function(){
+    STATE.memoWriting = true; render();
+    var t = el('memo-text'); if(t) t.focus();
+  };
+  if(el('btn-memo-cancel')) el('btn-memo-cancel').onclick = function(){
+    if(STATE.memoDraft.trim() && !confirm('書きかけのメモを破棄しますか?')) return;
+    STATE.memoDraft = ''; STATE.memoWriting = false; render();
+  };
+  if(el('btn-memo-add')) el('btn-memo-add').onclick = addMemo;
+  if(el('memo-text')) el('memo-text').oninput = function(){ STATE.memoDraft = this.value; };
+  if(el('memo-author')) el('memo-author').onchange = function(){ STATE.memoAuthor = this.value; };
+  if(el('btn-memo-list')) el('btn-memo-list').onclick = function(){ STATE.historyView = 'memos'; switchTab('history'); };
+
+  // 履歴タブ: 日付一覧/メモ一覧の切り替え、メモの検索・絞り込み
+  var hvs = document.querySelectorAll('[data-hview]');
+  for(var i=0;i<hvs.length;i++){ hvs[i].onclick = (function(v){ return function(){ STATE.historyView = v; render(); }; })(hvs[i].getAttribute('data-hview')); }
+  if(el('memo-q')) el('memo-q').oninput = function(){ STATE.memoQuery = this.value; updateMemoResults(); };
+  if(el('memo-line')) el('memo-line').onchange = function(){ STATE.memoLine = this.value; updateMemoResults(); };
+  if(el('memo-period')) el('memo-period').onchange = function(){ STATE.memoPeriod = this.value; updateMemoResults(); };
+  attachMemoHandlers(document);
 
   // 点検フィルタ + NGジャンプ
   var fbs = document.querySelectorAll('[data-filter]');
@@ -3227,6 +3966,12 @@ function attachHandlers(){
   var dis = document.querySelectorAll('[data-delitem]');
   for(var i=0;i<dis.length;i++){ dis[i].onclick = (function(id){ return function(){ deleteItem(id); }; })(dis[i].getAttribute('data-delitem')); }
 
+  // 品種リスト(項目管理)
+  if(el('btn-addproduct')) el('btn-addproduct').onclick = addProduct;
+  if(el('new-product')) el('new-product').onkeydown = function(e){ if(e.key==='Enter'&&STATE.editMode) addProduct(); };
+  var dps = document.querySelectorAll('[data-delproduct]');
+  for(var i=0;i<dps.length;i++){ dps[i].onclick = (function(n){ return function(){ deleteProduct(n); }; })(dps[i].getAttribute('data-delproduct')); }
+
   // 名簿(点検者・確認者)
   if(el('btn-addstaff')) el('btn-addstaff').onclick = addStaff;
   if(el('new-staff')) el('new-staff').onkeydown = function(e){ if(e.key==='Enter'&&STATE.editMode) addStaff(); };
@@ -3268,9 +4013,17 @@ function updateSyncBar(){
 // ============================================================
 // 起動
 // ============================================================
+// 保存が終わっていないデータがあるか
+// (点検記録・不具合・経過観察の保存待ち、保存キューの送信中・送信待ち、保存できていないメモ)
+function hasUnsavedWork(){
+  var memoUnsent = false;
+  for(var id in memoPending){ if(!memoPending[id].done) memoUnsent = true; }
+  return !!(pendingData || saveTimer || saveQueueRunning || saveQueue.length > 0 || memoUnsent ||
+    Object.keys(issueSaveTimers).length > 0 || Object.keys(watchSaveTimers).length > 0);
+}
 // ページを閉じる時、未保存データがあれば警告
 window.addEventListener('beforeunload', function(e){
-  if(pendingData || saveTimer){
+  if(hasUnsavedWork()){
     e.preventDefault();
     e.returnValue = '保存中のデータがあります。このまま閉じますか?';
     return e.returnValue;
